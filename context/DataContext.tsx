@@ -18,7 +18,7 @@ export interface Job {
   location: string;
   time: string;
   exp: string;
-  department: string; // 'Yazılım', 'Altyapı', 'Tasarım'
+  department: string;
 }
 
 export interface Project {
@@ -26,7 +26,7 @@ export interface Project {
   title: string;
   category: string;
   description: string;
-  image?: string; // Optional for listing
+  image?: string;
 }
 
 interface DataContextType {
@@ -43,7 +43,7 @@ interface DataContextType {
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-// Initial Data (Moved from hardcoded pages)
+// Initial Data
 const initialBlogPosts: BlogPost[] = [
   {
     id: '1',
@@ -70,7 +70,7 @@ const initialBlogPosts: BlogPost[] = [
     title: 'Kurumsal Veri Mimarisi ve Geleceğin Altyapıları',
     summary: 'Modern işletmeler için veri mimarisi stratejileri.',
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAjcya9GokW1VO3X49deC0WhxinBkE4BsTeBiIDO-ouukrtCnZvVR7NAjTOVcLnAGllI-qieD_PaCwawjujpqo--OkDPBMhe6_nap-rAEkh1VPO36h_Ce93RK_fzsTDRF3oxdIqURBR0w7-7D9hN5Jt9hUNBe34zaIM2l7mHFveJEpcv1i8R9S4c-yiajqaSoWhlEjE68p4_C8-wrigZPym_rp4ULogW2hfvJaI_Js2ROKKd_6Z0qWTeUN4ZQcGxypjD2xK2GSnPPh6',
-    content: `Modern işletmeler için veri mimarisi, sadece bir depolama stratejisi değil... (Existing Article Content)`
+    content: `Modern işletmeler için veri mimarisi, sadece bir depolama stratejisi değil...`
   }
 ];
 
@@ -126,36 +126,134 @@ const initialProjects: Project[] = [
 ];
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Use localStorage to simulate persistence
-  const [blogPosts, setBlogPosts] = useState<BlogPost[]>(() => {
-    const saved = localStorage.getItem('blogPosts');
-    return saved ? JSON.parse(saved) : initialBlogPosts;
-  });
+  const [db, setDb] = useState<any>(null);
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
 
-  const [jobs, setJobs] = useState<Job[]>(() => {
-    const saved = localStorage.getItem('jobs');
-    return saved ? JSON.parse(saved) : initialJobs;
-  });
+  // Initialize SQLite DB
+  useEffect(() => {
+    const initDB = async () => {
+      // @ts-ignore
+      if (!window.initSqlJs) return;
+      
+      try {
+        // @ts-ignore
+        const SQL = await window.initSqlJs({
+          locateFile: (file: string) => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`
+        });
 
-  const [projects, setProjects] = useState<Project[]>(() => {
-    const saved = localStorage.getItem('projects');
-    return saved ? JSON.parse(saved) : initialProjects;
-  });
+        const savedDb = localStorage.getItem('sqliteDb');
+        let database;
 
-  // Effects to save changes
-  useEffect(() => localStorage.setItem('blogPosts', JSON.stringify(blogPosts)), [blogPosts]);
-  useEffect(() => localStorage.setItem('jobs', JSON.stringify(jobs)), [jobs]);
-  useEffect(() => localStorage.setItem('projects', JSON.stringify(projects)), [projects]);
+        if (savedDb) {
+           const u8 = new Uint8Array(JSON.parse(savedDb));
+           database = new SQL.Database(u8);
+        } else {
+           database = new SQL.Database();
+           
+           // Initialize Tables
+           database.run("CREATE TABLE IF NOT EXISTS blog_posts (id TEXT PRIMARY KEY, title TEXT, category TEXT, date TEXT, summary TEXT, image TEXT, content TEXT)");
+           database.run("CREATE TABLE IF NOT EXISTS jobs (id TEXT PRIMARY KEY, title TEXT, type TEXT, location TEXT, time TEXT, exp TEXT, department TEXT)");
+           database.run("CREATE TABLE IF NOT EXISTS projects (id TEXT PRIMARY KEY, title TEXT, category TEXT, description TEXT, image TEXT)");
+           
+           // Insert Initial Data
+           initialBlogPosts.forEach(p => {
+             database.run("INSERT INTO blog_posts VALUES (?,?,?,?,?,?,?)", [p.id, p.title, p.category, p.date, p.summary, p.image, p.content]);
+           });
+           initialJobs.forEach(j => {
+             database.run("INSERT INTO jobs VALUES (?,?,?,?,?,?,?)", [j.id, j.title, j.type, j.location, j.time, j.exp, j.department]);
+           });
+           initialProjects.forEach(p => {
+             database.run("INSERT INTO projects VALUES (?,?,?,?,?)", [p.id, p.title, p.category, p.description, p.image || ""]);
+           });
+        }
+        
+        setDb(database);
+        refreshData(database);
+      } catch (err) {
+        console.error("Failed to init database:", err);
+      }
+    };
+
+    initDB();
+  }, []);
+
+  // Helper to convert SQL result to array of objects
+  const resultToObjects = (execResult: any) => {
+    if (!execResult || execResult.length === 0) return [];
+    const columns = execResult[0].columns;
+    const values = execResult[0].values;
+    return values.map((row: any[]) => {
+      const obj: any = {};
+      columns.forEach((col: string, i: number) => {
+        obj[col] = row[i];
+      });
+      return obj;
+    });
+  };
+
+  const refreshData = (database: any) => {
+    if (!database) return;
+    
+    try {
+      const postsRes = database.exec("SELECT * FROM blog_posts");
+      setBlogPosts(resultToObjects(postsRes) as BlogPost[]);
+
+      const jobsRes = database.exec("SELECT * FROM jobs");
+      setJobs(resultToObjects(jobsRes) as Job[]);
+
+      const projectsRes = database.exec("SELECT * FROM projects");
+      setProjects(resultToObjects(projectsRes) as Project[]);
+    } catch(e) {
+      console.error("Error fetching data", e);
+    }
+  };
+
+  const saveDb = (database: any) => {
+    if (!database) return;
+    const data = database.export();
+    const arr = Array.from(data);
+    localStorage.setItem('sqliteDb', JSON.stringify(arr));
+    refreshData(database);
+  };
 
   // Actions
-  const addBlogPost = (post: BlogPost) => setBlogPosts(prev => [post, ...prev]);
-  const deleteBlogPost = (id: string) => setBlogPosts(prev => prev.filter(p => p.id !== id));
+  const addBlogPost = (post: BlogPost) => {
+    if (!db) return;
+    db.run("INSERT INTO blog_posts VALUES (?,?,?,?,?,?,?)", [post.id, post.title, post.category, post.date, post.summary, post.image, post.content || ""]);
+    saveDb(db);
+  };
 
-  const addJob = (job: Job) => setJobs(prev => [job, ...prev]);
-  const deleteJob = (id: string) => setJobs(prev => prev.filter(j => j.id !== id));
+  const deleteBlogPost = (id: string) => {
+    if (!db) return;
+    db.run("DELETE FROM blog_posts WHERE id = ?", [id]);
+    saveDb(db);
+  };
 
-  const addProject = (project: Project) => setProjects(prev => [project, ...prev]);
-  const deleteProject = (id: string) => setProjects(prev => prev.filter(p => p.id !== id));
+  const addJob = (job: Job) => {
+    if (!db) return;
+    db.run("INSERT INTO jobs VALUES (?,?,?,?,?,?,?)", [job.id, job.title, job.type, job.location, job.time, job.exp, job.department]);
+    saveDb(db);
+  };
+
+  const deleteJob = (id: string) => {
+    if (!db) return;
+    db.run("DELETE FROM jobs WHERE id = ?", [id]);
+    saveDb(db);
+  };
+
+  const addProject = (project: Project) => {
+    if (!db) return;
+    db.run("INSERT INTO projects VALUES (?,?,?,?,?)", [project.id, project.title, project.category, project.description, project.image || ""]);
+    saveDb(db);
+  };
+
+  const deleteProject = (id: string) => {
+    if (!db) return;
+    db.run("DELETE FROM projects WHERE id = ?", [id]);
+    saveDb(db);
+  };
 
   return (
     <DataContext.Provider value={{

@@ -32,11 +32,14 @@ const AdminDashboard: React.FC = () => {
       if (!formData.title?.trim()) errors.title = 'Başlık alanı zorunludur.';
       if (!formData.category?.trim()) errors.category = 'Kategori alanı zorunludur.';
       if (!formData.summary?.trim()) errors.summary = 'Özet alanı zorunludur.';
+      
+      // Image validation: allow URL or Data URI (Base64)
       if (!formData.image?.trim()) {
-        errors.image = 'Görsel URL alanı zorunludur.';
-      } else if (!formData.image.match(/^https?:\/\/.+/)) {
-        errors.image = 'Geçerli bir URL giriniz (http:// veya https:// ile başlamalı).';
+        errors.image = 'Görsel alanı zorunludur.';
+      } else if (!formData.image.startsWith('data:') && !formData.image.match(/^https?:\/\/.+/)) {
+        errors.image = 'Geçerli bir URL giriniz veya dosya yükleyiniz.';
       }
+
       if (!formData.content?.trim()) errors.content = 'İçerik alanı zorunludur.';
     } else if (activeTab === 'careers') {
       if (!formData.title?.trim()) errors.title = 'Pozisyon adı zorunludur.';
@@ -73,6 +76,22 @@ const AdminDashboard: React.FC = () => {
     setIsModalOpen(false);
     setFormData({});
     setFormErrors({});
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData((prev: any) => ({ ...prev, image: reader.result as string }));
+        setFormErrors((prev) => {
+             const newErrors = { ...prev };
+             delete newErrors.image;
+             return newErrors;
+        });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   // Helper to render input with error styling
@@ -116,7 +135,49 @@ const AdminDashboard: React.FC = () => {
           <InputField name="title" placeholder="Başlık" value={formData.title} onChange={(e: any) => setFormData({...formData, title: e.target.value})} />
           <InputField name="category" placeholder="Kategori" value={formData.category} onChange={(e: any) => setFormData({...formData, category: e.target.value})} />
           <TextAreaField name="summary" placeholder="Özet" value={formData.summary} onChange={(e: any) => setFormData({...formData, summary: e.target.value})} />
-          <InputField name="image" placeholder="Görsel URL (https://...)" value={formData.image} onChange={(e: any) => setFormData({...formData, image: e.target.value})} />
+          
+          {/* Image Upload Section */}
+          <div className="mb-3">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Görsel</label>
+            <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
+                {formData.image && (
+                    <div className="mb-4 relative group">
+                        <img src={formData.image} alt="Önizleme" className="w-full h-48 object-cover rounded-lg border border-gray-300 shadow-sm" />
+                        <button 
+                            onClick={() => setFormData({...formData, image: ''})}
+                            className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full shadow-md transition-all"
+                            title="Görseli Kaldır"
+                        >
+                            <span className="material-symbols-outlined text-sm block">close</span>
+                        </button>
+                    </div>
+                )}
+                
+                <div className="flex flex-col gap-3">
+                    <label className="cursor-pointer block">
+                        <input 
+                            type="file" 
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-primary file:text-white hover:file:bg-primary-dark cursor-pointer shadow-sm"
+                        />
+                    </label>
+                    <div className="text-center text-xs text-gray-400 font-bold tracking-wider">- VEYA URL KULLANIN -</div>
+                    <input 
+                        className={`w-full p-3 border rounded transition-colors outline-none focus:ring-2 ${
+                        formErrors.image 
+                            ? 'border-red-500 focus:ring-red-200' 
+                            : 'border-gray-300 focus:border-primary focus:ring-blue-100'
+                        }`}
+                        placeholder="https://example.com/image.jpg" 
+                        value={formData.image || ''} 
+                        onChange={(e) => setFormData({...formData, image: e.target.value})}
+                    />
+                </div>
+            </div>
+            {formErrors.image && <p className="text-red-500 text-xs mt-1 font-medium">{formErrors.image}</p>}
+          </div>
+
           <TextAreaField name="content" placeholder="İçerik (HTML veya Text)" value={formData.content} onChange={(e: any) => setFormData({...formData, content: e.target.value})} height="h-32" />
         </>
       );
