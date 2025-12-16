@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { HashRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { DataProvider } from './context/DataContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -211,7 +211,7 @@ const App: React.FC = () => {
   return (
     <AuthProvider>
       <DataProvider>
-        <HashRouter>
+        <BrowserRouter>
           <div className="flex flex-col min-h-screen">
             <Header />
             <main className="flex-grow">
@@ -245,7 +245,7 @@ const App: React.FC = () => {
             </main>
             <Footer />
           </div>
-        </HashRouter>
+        </BrowserRouter>
       </DataProvider>
     </AuthProvider>
   );
