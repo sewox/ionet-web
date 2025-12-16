@@ -29,16 +29,40 @@ export interface Project {
   image?: string;
 }
 
+export interface Page {
+  id: string;
+  slug: string;
+  title: string;
+  content: string;
+  created_at?: string;
+}
+
+export interface Message {
+  id: string;
+  name: string;
+  surname: string;
+  email: string;
+  phone: string;
+  message: string;
+  date: string;
+}
+
 interface DataContextType {
   blogPosts: BlogPost[];
   jobs: Job[];
   projects: Project[];
-  addBlogPost: (post: BlogPost) => void;
-  deleteBlogPost: (id: string) => void;
-  addJob: (job: Job) => void;
-  deleteJob: (id: string) => void;
-  addProject: (project: Project) => void;
-  deleteProject: (id: string) => void;
+  pages: Page[];
+  messages: Message[];
+  addBlogPost: (post: BlogPost) => Promise<void>;
+  deleteBlogPost: (id: string) => Promise<void>;
+  addJob: (job: Job) => Promise<void>;
+  deleteJob: (id: string) => Promise<void>;
+  addProject: (project: Project) => Promise<void>;
+  deleteProject: (id: string) => Promise<void>;
+  addPage: (page: Page) => Promise<void>;
+  deletePage: (id: string) => Promise<void>;
+  sendMessage: (msg: Message) => Promise<void>;
+  deleteMessage: (id: string) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -60,7 +84,7 @@ const initialBlogPosts: BlogPost[] = [
     date: '28 Ekim 2023',
     title: 'Sıfır Güven (Zero Trust) Mimarisine Geçiş',
     summary: 'Geleneksel ağ güvenliği modellerinin yerini alan Zero Trust yaklaşımının temel prensipleri.',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA36eoYAQIvBio9r_aIUu7CATagqffdaSfWY6i0IvSvW3GL1_4YoFDgQnc5JzqZMKfy4jbkQkDxQRG4yuEQbHGFQ8Z4g_xgj_tO5J-dYHz0RBeEA3Wo6OLRlP2tVbhV6xAcItw4CggAOu6HqV9-0TRCluN9Ka70-S_klANa4OWLh6PdBIjDJ2rMrU-XgzXbTdllnHwaxLUqUZd_vJFgylKrZMTo-1TkXdQPXBEobZqG-G8OK-4xXA0pgfAFHGeBDxcdI_3uiYD0310b',
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA36eoYAQIvBio9r_aIUu7CATagqffdaSfWY6i0IvSvW3GL1_4YoFDgQnc5JzqZMKfy4jbkQkDxXRG4yuEQbHGFQ8Z4g_xgj_tO5J-dYHz0RBeEA3Wo6OLRlP2tVbhV6xAcItw4CggAOu6HqV9-0TRCluN9Ka70-S_klANa4OWLh6PdBIjDJ2rMrU-XgzXbTdllnHwaxLUqUZd_vJFgylKrZMTo-1TkXdQPXBEobZqG-G8OK-4xXA0pgfAFHGeBDxcdI_3uiYD0310b',
     content: 'Zero Trust detayları...'
   },
   {
@@ -69,7 +93,7 @@ const initialBlogPosts: BlogPost[] = [
     date: '24 Ekim 2023',
     title: 'Kurumsal Veri Mimarisi ve Geleceğin Altyapıları',
     summary: 'Modern işletmeler için veri mimarisi stratejileri.',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAjcya9GokW1VO3X49deC0WhxinBkE4BsTeBiIDO-ouukrtCnZvVR7NAjTOVcLnAGllI-qieD_PaCwawjujpqo--OkDPBMhe6_nap-rAEkh1VPO36h_Ce93RK_fzsTDRF3oxdIqURBR0w7-7D9hN5Jt9hUNBe34zaIM2l7mHFveJEpcv1i8R9S4c-yiajqaSoWhlEjE68p4_C8-wrigZPym_rp4ULogW2hfvJaI_Js2ROKKd_6Z0qWTeUN4ZQcGxypjD2xK2GSnPPh6',
+    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAjcya9GokW1VO3X49deC0WhxinBkE4BsTeBiIDO-ouukrtCnZvVR7NAjTOVcLnAGllI-qieD_PaCwawjujpqo--OkDPBMhe6_nap-rAEkh1VPO36h_Ce93RK_fzsTDRF3oxdIqURBR0w7-7D9hN5Jt9hUNBe34zaIM2l7mHFveJEpcv1i8R9S4c-yiajqaSoWhlEjE68p4_C8-wrigZPym_rp4ULogW2hfvJaI_Js2ROKKD_6Z0qWTeUN4ZQcGxypjD2xK2GSnPPh6',
     content: `Modern işletmeler için veri mimarisi, sadece bir depolama stratejisi değil...`
   }
 ];
@@ -126,141 +150,78 @@ const initialProjects: Project[] = [
 ];
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [db, setDb] = useState<any>(null);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [pages, setPages] = useState<Page[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
 
-  // Initialize SQLite DB
-  useEffect(() => {
-    const initDB = async () => {
-      // @ts-ignore
-      if (!window.initSqlJs) return;
-      
-      try {
-        // @ts-ignore
-        const SQL = await window.initSqlJs({
-          locateFile: (file: string) => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`
-        });
-
-        const savedDb = localStorage.getItem('sqliteDb');
-        let database;
-
-        if (savedDb) {
-           const u8 = new Uint8Array(JSON.parse(savedDb));
-           database = new SQL.Database(u8);
-        } else {
-           database = new SQL.Database();
-           
-           // Initialize Tables
-           database.run("CREATE TABLE IF NOT EXISTS blog_posts (id TEXT PRIMARY KEY, title TEXT, category TEXT, date TEXT, summary TEXT, image TEXT, content TEXT)");
-           database.run("CREATE TABLE IF NOT EXISTS jobs (id TEXT PRIMARY KEY, title TEXT, type TEXT, location TEXT, time TEXT, exp TEXT, department TEXT)");
-           database.run("CREATE TABLE IF NOT EXISTS projects (id TEXT PRIMARY KEY, title TEXT, category TEXT, description TEXT, image TEXT)");
-           
-           // Insert Initial Data
-           initialBlogPosts.forEach(p => {
-             database.run("INSERT INTO blog_posts VALUES (?,?,?,?,?,?,?)", [p.id, p.title, p.category, p.date, p.summary, p.image, p.content]);
-           });
-           initialJobs.forEach(j => {
-             database.run("INSERT INTO jobs VALUES (?,?,?,?,?,?,?)", [j.id, j.title, j.type, j.location, j.time, j.exp, j.department]);
-           });
-           initialProjects.forEach(p => {
-             database.run("INSERT INTO projects VALUES (?,?,?,?,?)", [p.id, p.title, p.category, p.description, p.image || ""]);
-           });
-        }
-        
-        setDb(database);
-        refreshData(database);
-      } catch (err) {
-        console.error("Failed to init database:", err);
-      }
-    };
-
-    initDB();
-  }, []);
-
-  // Helper to convert SQL result to array of objects
-  const resultToObjects = (execResult: any) => {
-    if (!execResult || execResult.length === 0) return [];
-    const columns = execResult[0].columns;
-    const values = execResult[0].values;
-    return values.map((row: any[]) => {
-      const obj: any = {};
-      columns.forEach((col: string, i: number) => {
-        obj[col] = row[i];
-      });
-      return obj;
-    });
-  };
-
-  const refreshData = (database: any) => {
-    if (!database) return;
-    
+  const fetchData = async () => {
     try {
-      const postsRes = database.exec("SELECT * FROM blog_posts");
-      setBlogPosts(resultToObjects(postsRes) as BlogPost[]);
-
-      const jobsRes = database.exec("SELECT * FROM jobs");
-      setJobs(resultToObjects(jobsRes) as Job[]);
-
-      const projectsRes = database.exec("SELECT * FROM projects");
-      setProjects(resultToObjects(projectsRes) as Project[]);
-    } catch(e) {
-      console.error("Error fetching data", e);
+      const [postsRes, jobsRes, projRes, pagesRes, msgRes] = await Promise.all([
+        fetch('/api/blog_posts').then(r => r.json()),
+        fetch('/api/jobs').then(r => r.json()),
+        fetch('/api/projects').then(r => r.json()),
+        fetch('/api/pages').then(r => r.json()),
+        fetch('/api/messages').then(r => r.json())
+      ]);
+      setBlogPosts(postsRes || []);
+      setJobs(jobsRes || []);
+      setProjects(projRes || []);
+      setPages(pagesRes || []);
+      setMessages(msgRes || []);
+    } catch (error) {
+      console.error("Failed to fetch data", error);
     }
   };
 
-  const saveDb = (database: any) => {
-    if (!database) return;
-    const data = database.export();
-    const arr = Array.from(data);
-    localStorage.setItem('sqliteDb', JSON.stringify(arr));
-    refreshData(database);
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // API Helpers
+  const postData = async (url: string, data: any) => {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'İşlem başarısız oldu');
+    }
+    fetchData();
+  };
+
+  const deleteData = async (url: string) => {
+    await fetch(url, { method: 'DELETE' });
+    fetchData();
   };
 
   // Actions
-  const addBlogPost = (post: BlogPost) => {
-    if (!db) return;
-    db.run("INSERT INTO blog_posts VALUES (?,?,?,?,?,?,?)", [post.id, post.title, post.category, post.date, post.summary, post.image, post.content || ""]);
-    saveDb(db);
-  };
+  const addBlogPost = async (post: BlogPost) => postData('/api/blog_posts', post);
+  const deleteBlogPost = async (id: string) => deleteData(`/api/blog_posts/${id}`);
 
-  const deleteBlogPost = (id: string) => {
-    if (!db) return;
-    db.run("DELETE FROM blog_posts WHERE id = ?", [id]);
-    saveDb(db);
-  };
+  const addJob = async (job: Job) => postData('/api/jobs', job);
+  const deleteJob = async (id: string) => deleteData(`/api/jobs/${id}`);
 
-  const addJob = (job: Job) => {
-    if (!db) return;
-    db.run("INSERT INTO jobs VALUES (?,?,?,?,?,?,?)", [job.id, job.title, job.type, job.location, job.time, job.exp, job.department]);
-    saveDb(db);
-  };
+  const addProject = async (project: Project) => postData('/api/projects', project);
+  const deleteProject = async (id: string) => deleteData(`/api/projects/${id}`);
 
-  const deleteJob = (id: string) => {
-    if (!db) return;
-    db.run("DELETE FROM jobs WHERE id = ?", [id]);
-    saveDb(db);
-  };
+  const addPage = async (page: Page) => postData('/api/pages', page);
+  const deletePage = async (id: string) => deleteData(`/api/pages/${id}`);
 
-  const addProject = (project: Project) => {
-    if (!db) return;
-    db.run("INSERT INTO projects VALUES (?,?,?,?,?)", [project.id, project.title, project.category, project.description, project.image || ""]);
-    saveDb(db);
-  };
-
-  const deleteProject = (id: string) => {
-    if (!db) return;
-    db.run("DELETE FROM projects WHERE id = ?", [id]);
-    saveDb(db);
-  };
+  const sendMessage = async (msg: Message) => postData('/api/messages', msg);
+  const deleteMessage = async (id: string) => deleteData(`/api/messages/${id}`);
 
   return (
     <DataContext.Provider value={{
-      blogPosts, jobs, projects,
+      blogPosts, jobs, projects, pages, messages,
       addBlogPost, deleteBlogPost,
       addJob, deleteJob,
-      addProject, deleteProject
+      addProject, deleteProject,
+      addPage, deletePage,
+      sendMessage, deleteMessage
     }}>
       {children}
     </DataContext.Provider>
