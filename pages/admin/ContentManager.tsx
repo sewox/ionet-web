@@ -17,6 +17,9 @@ const GROUPS = [
 const SETTING_DEFINITIONS = [
     // General
     { group: 'general', key: 'site_title', label: 'Site Başlığı', type: 'text' },
+    { group: 'general', key: 'site_description', label: 'Varsayılan Site Açıklaması (Description)', type: 'long_text' },
+    { group: 'general', key: 'site_keywords', label: 'Varsayılan Anahtar Kelimeler (Keywords)', type: 'text' },
+    { group: 'general', key: 'site_og_image', label: 'Varsayılan Sosyal Medya Görseli (OG Image)', type: 'image' },
 
     // Header & Footer
     { group: 'header_footer', key: 'header_logo_text', label: 'Logo Metni', type: 'text' },

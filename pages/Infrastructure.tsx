@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import SEO from '../components/SEO';
 import { useContent } from '../hooks/useContent';
 import { useData } from '../context/DataContext';
 
@@ -33,138 +34,138 @@ const Infrastructure: React.FC = () => {
     const displayFeatures = infraFeatures && infraFeatures.length > 0 ? infraFeatures : defaultFeatures;
     const displayPartners = techPartners && techPartners.length > 0 ? techPartners : defaultPartners;
     return (
-        <div className="flex flex-col">
-            {/* Breadcrumb */}
-            <div className="bg-white border-b border-gray-100">
-                <div className="max-w-7xl mx-auto px-6 py-4">
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <Link to="/" className="hover:text-primary">Anasayfa</Link>
-                        <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-                        <Link to="/services" className="hover:text-primary">Hizmetler</Link>
-                        <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-                        <span className="font-semibold text-primary">Altyapı Çözümleri</span>
-                    </div>
-                </div>
-            </div>
 
-            {/* Hero */}
-            <section className="bg-white py-16 lg:py-24 overflow-hidden">
-                <div className="max-w-7xl mx-auto px-6">
-                    <div className="grid lg:grid-cols-2 gap-16 items-center">
-                        <div>
-                            <h1 className="text-4xl lg:text-5xl font-black text-gray-900 mb-6 leading-tight">
-                                {getContent('infra_hero_title', 'Geleceğin Altyapısını İnşa Ediyoruz')}
+        <>
+            <SEO title="Altyapı" description="Kurumsal altyapı çözümleri." />
+            <div className="flex flex-col">
+                {/* Hero */}
+                <section className="relative w-full py-20 bg-secondary overflow-hidden">
+                    <div className="absolute inset-0 z-0 opacity-20" style={{ backgroundImage: "radial-gradient(#127ae2 1px, transparent 1px)", backgroundSize: "32px 32px" }}></div>
+                    <div className="relative z-10 max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                        <div className="animate-fade-in-up">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/20 border border-primary/30 w-fit backdrop-blur-sm mb-6">
+                                <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                                <span className="text-blue-200 text-xs font-semibold uppercase tracking-wider">{getContent('infra_hero_badge_title', 'Altyapı & Yönetim')}</span>
+                            </div>
+                            <h1 className="text-4xl md:text-5xl font-black text-white leading-tight mb-6">
+                                {getContent('infra_hero_title', 'İşletmenizin Dijital Omurgasını Güçlendiriyoruz')}
                             </h1>
-                            <p className="text-lg text-gray-600 leading-relaxed mb-8">
-                                {getContent('infra_hero_desc', 'İş sürekliliğinizi garanti altına alan, ölçeklenebilir ve güvenli sistem mimarisi tasarlıyoruz. I/ONET ile teknolojik altyapınızı modernize edin.')}
+                            <p className="text-lg text-gray-300 mb-8 leading-relaxed">
+                                {getContent('infra_hero_desc', 'Kesintisiz, güvenli ve yüksek performanslı BT altyapı çözümleri ile operasyonel verimliliğinizi maksimize ediyoruz.')}
                             </p>
                             <div className="flex flex-wrap gap-4">
-                                <button className="bg-primary hover:bg-primary-dark text-white font-bold py-3 px-8 rounded-lg shadow-lg shadow-blue-200 transition-all">
-                                    Uzmanlarımızla Görüşün
-                                </button>
-                                <button className="bg-white border border-gray-200 text-gray-900 font-bold py-3 px-8 rounded-lg hover:bg-gray-50 transition-all">
-                                    Çözümleri Keşfedin
-                                </button>
+                                <a href="#features" className="px-8 py-4 bg-primary hover:bg-primary-dark text-white font-bold rounded-lg transition-all shadow-lg shadow-primary/25 flex items-center gap-2">
+                                    Çözümlerimiz
+                                    <span className="material-symbols-outlined">arrow_downward</span>
+                                </a>
+                                <Link to="/contact" className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg backdrop-blur-sm transition-all border border-white/10">
+                                    Teklif Alın
+                                </Link>
                             </div>
                         </div>
-                        <div className="relative">
-                            <div className="relative rounded-2xl bg-surface-light p-2 shadow-xl ring-1 ring-gray-100">
-                                <div className="aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 relative group">
-                                    <div className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" style={{ backgroundImage: `url('${getContent('infra_hero_img', 'https://lh3.googleusercontent.com/aida-public/AB6AXuDhCMjth5vqj6iD3z9xOT0humbWStYdT4kTUMKj5CX2zpNmsxuSYopR7Bm1gDOLhEf23_Cbn0Sc2-3bOLHRrM5My6wP-D42BPtFE3HERT_HBd_bAxlJIqcIZKlM653n3oaFm2Vkd0XbKeG6q-8ZxMx3jw9HggVyAekJsgMZmp5QAVPfXmIZzZ-1sLuInqMeADedTGkNxLBOPLSPOJCwkEocUcxfg4ELjNJn_9tli5k0yI6qmiaQZZCMYGDFcxRxeYA6yqbVWZu8kMQq')}')` }}></div>
-                                    <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent"></div>
-                                </div>
-                            </div>
+                        <div className="relative lg:h-[500px] flex items-center justify-center animate-fade-in">
+                            <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full transform scale-75"></div>
+                            <img
+                                src={getContent('infra_hero_img', 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=2000&auto=format&fit=crop')}
+                                alt="Infrastructure"
+                                className="relative z-10 rounded-2xl shadow-2xl border border-gray-700/50 w-full h-full object-cover"
+                            />
                             {/* Floating Badge */}
-                            <div className="absolute -bottom-6 -left-6 bg-white p-4 rounded-xl shadow-xl border border-gray-100 hidden md:block">
-                                <div className="flex items-center gap-3">
-                                    <div className="size-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                            <div className="absolute -bottom-6 -left-6 bg-white p-5 rounded-xl shadow-xl z-20 max-w-[200px] hidden md:block">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className="p-2 bg-green-100 text-green-600 rounded-lg">
                                         <span className="material-symbols-outlined">check_circle</span>
                                     </div>
-                                    <div>
-                                        <p className="font-bold text-gray-900">{getContent('infra_hero_badge_title', '%99.9 Uptime')}</p>
-                                        <p className="text-xs text-gray-500">{getContent('infra_hero_badge_desc', 'Garantili Süreklilik')}</p>
+                                    <span className="font-bold text-gray-900 text-sm">{getContent('infra_hero_badge_title', 'Sptime Garantisi')}</span>
+                                </div>
+                                <p className="text-xs text-gray-500">{getContent('infra_hero_badge_desc', '%99.9 Uptime ile iş sürekliliğinizi garanti altına alıyoruz.')}</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Features Grid */}
+                <section id="features" className="py-24 bg-surface-light">
+                    <div className="max-w-7xl mx-auto px-6">
+                        <div className="text-center max-w-3xl mx-auto mb-16">
+                            <span className="text-primary font-bold text-sm uppercase tracking-widest mb-2">Hizmetlerimiz</span>
+                            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">{getContent('infra_features_title', 'Uçtan Uca Altyapı Yönetimi')}</h2>
+                            <p className="text-gray-600 text-lg">
+                                {getContent('infra_features_desc', 'Modern işletmelerin ihtiyaç duyduğu tüm teknoloji katmanlarında uzman desteği sağlıyoruz.')}
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {displayFeatures.map((feature: any, index: number) => (
+                                <div key={feature.id || index} className="bg-white p-8 rounded-2xl border border-gray-100 hover:border-gray-200 hover:shadow-xl transition-all duration-300 group">
+                                    <div className="w-14 h-14 bg-primary/5 text-primary rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                                        <span className="material-symbols-outlined text-3xl">{feature.icon}</span>
                                     </div>
+                                    <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
+                                    <p className="text-gray-600 text-sm leading-relaxed mb-6">
+                                        {feature.description}
+                                    </p>
+                                    <ul className="space-y-2 border-t border-gray-50 pt-4">
+                                        {feature.points && feature.points.split('\n').map((point: string, i: number) => (
+                                            <li key={i} className="flex items-start gap-2 text-xs text-gray-500 font-medium">
+                                                <span className="material-symbols-outlined text-[16px] text-green-500 shrink-0">check</span>
+                                                {point}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                {/* Tech Partners */}
+                <section className="py-20 bg-white border-y border-gray-100">
+                    <div className="max-w-7xl mx-auto px-6">
+                        <div className="text-center mb-12">
+                            <h2 className="text-2xl font-bold text-gray-900">{getContent('infra_partners_title', 'Teknoloji Partnerlerimiz')}</h2>
+                        </div>
+                        <div className="flex flex-wrap justify-center gap-8 md:gap-16 opacity-70 grayscale hover:grayscale-0 transition-all duration-500">
+                            {/* Fallback partners - ideally these should be images/logos */}
+                            {displayPartners.map((partner: any) => (
+                                <div key={partner.id || partner.name} className="flex items-center gap-2 text-xl font-bold text-gray-400 hover:text-primary transition-colors cursor-default">
+                                    <span className="material-symbols-outlined">{partner.icon}</span>
+                                    <span>{partner.name}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                {/* CTA */}
+                <section className="py-24 bg-surface-light">
+                    <div className="max-w-5xl mx-auto px-6">
+                        <div className="bg-secondary rounded-3xl p-10 md:p-16 text-center relative overflow-hidden shadow-2xl">
+                            <div className="absolute top-0 left-0 w-full h-full opacity-10" style={{ backgroundImage: "radial-gradient(#fff 1px, transparent 1px)", backgroundSize: "24px 24px" }}></div>
+                            <div className="relative z-10">
+                                <span className="inline-block py-1 px-3 rounded-full bg-white/10 text-white text-xs font-bold uppercase tracking-wider mb-6">
+                                    {getContent('infra_cta_badge', 'Ücretsiz Analiz')}
+                                </span>
+                                <h2 className="text-3xl md:text-5xl font-black text-white mb-6 leading-tight">
+                                    {getContent('infra_cta_title', 'Altyapınız Ne Kadar Güçlü?')}
+                                </h2>
+                                <p className="text-lg text-blue-100 mb-10 max-w-2xl mx-auto">
+                                    {getContent('infra_cta_desc', 'Mevcut sistemlerinizi ücretsiz analiz edelim, riskleri ve iyileştirme fırsatlarını raporlayalım.')}
+                                </p>
+                                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                                    <Link to="/contact" className="w-full sm:w-auto px-8 py-4 bg-primary hover:bg-primary-dark text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-primary/50 transform hover:-translate-y-1">
+                                        {getContent('infra_cta_btn1_text', 'Analiz Talep Et')}
+                                    </Link>
+                                    <Link to="/contact" className="w-full sm:w-auto px-8 py-4 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl transition-all border border-white/10">
+                                        {getContent('infra_cta_btn2_text', 'Bize Ulaşın')}
+                                    </Link>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </section>
-
-            {/* Services Grid */}
-            <section className="bg-surface-light py-20">
-                <div className="max-w-7xl mx-auto px-6">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl font-bold text-gray-900 mb-4">{getContent('infra_features_title', 'Hizmet Kapsamımız')}</h2>
-                        <p className="text-gray-600 max-w-2xl mx-auto">
-                            {getContent('infra_features_desc', 'Kurumunuzun ihtiyaçlarına özel, uçtan uca altyapı yönetimi ve entegrasyon hizmetleri.')}
-                        </p>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-8">
-                        {displayFeatures.map((feature: any, idx: number) => (
-                            <div key={feature.id || idx} className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm hover:shadow-md transition-all group">
-                                <div className="size-12 bg-blue-50 text-primary rounded-xl flex items-center justify-center mb-6">
-                                    <span className="material-symbols-outlined text-3xl">{feature.icon}</span>
-                                </div>
-                                <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
-                                <p className="text-gray-600 text-sm leading-relaxed mb-6">
-                                    {feature.description}
-                                </p>
-                                <ul className="space-y-2 mb-6">
-                                    {feature.points && feature.points.split('\n').map((point: string, pIdx: number) => (
-                                        <li key={pIdx} className="flex items-center gap-2 text-sm text-gray-600">
-                                            <span className="material-symbols-outlined text-primary text-sm">check</span>
-                                            {point}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* Tech Stack Bar */}
-            <section className="bg-white border-t border-gray-100 py-12">
-                <div className="max-w-7xl mx-auto px-6 text-center">
-                    <p className="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-8">{getContent('infra_partners_title', 'TEKNOLOJİ İŞ ORTAKLARIMIZ')}</p>
-                    <div className="flex flex-wrap justify-center gap-8 md:gap-16 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
-                        {displayPartners.map((partner: any, idx: number) => (
-                            <span key={partner.id || idx} className="text-xl font-bold text-gray-600 flex items-center gap-2">
-                                <span className="material-symbols-outlined">{partner.icon}</span>
-                                {partner.name}
-                            </span>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* CTA */}
-            <section className="bg-secondary py-20">
-                <div className="max-w-4xl mx-auto px-6 text-center">
-                    <div className="inline-flex rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium text-white backdrop-blur-sm mb-6">
-                        {getContent('infra_cta_badge', 'Hemen Başlayın')}
-                    </div>
-                    <h2
-                        className="text-3xl md:text-5xl font-black text-white mb-6 tracking-tight"
-                        dangerouslySetInnerHTML={{ __html: getContent('infra_cta_title', 'Altyapınızı Modernleştirmeye <br class="hidden md:block"/> Hazır Mısınız?') }}
-                    />
-                    <p
-                        className="text-lg text-gray-400 mb-10 max-w-2xl mx-auto"
-                        dangerouslySetInnerHTML={{ __html: getContent('infra_cta_desc', 'Mevcut sistemlerinizin analizini yapalım, size en uygun modernizasyon yol haritasını birlikte belirleyelim.') }}
-                    />
-                    <div className="flex flex-col sm:flex-row justify-center gap-4">
-                        <button className="bg-primary hover:bg-primary-dark text-white font-bold py-4 px-8 rounded-lg transition-all">
-                            {getContent('infra_cta_btn1_text', 'Ücretsiz Analiz Talep Edin')}
-                        </button>
-                        <button className="bg-transparent border border-gray-700 text-white font-bold py-4 px-8 rounded-lg hover:bg-white/5 transition-all">
-                            {getContent('infra_cta_btn2_text', 'İletişime Geçin')}
-                        </button>
-                    </div>
-                </div>
-            </section>
-        </div>
+                </section>
+            </div>
+        </>
     );
 };
 

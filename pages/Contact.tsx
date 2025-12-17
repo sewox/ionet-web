@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
+import SEO from '../components/SEO';
 import { useContent } from '../hooks/useContent';
 
 const Contact: React.FC = () => {
@@ -89,9 +90,10 @@ const Contact: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col">
-      <div className="bg-white py-12 md:py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <>
+      <SEO title="İletişim" description="Bize ulaşın. Sorularınız için buradayız." />
+      <div className="flex flex-col items-center bg-surface-light min-h-screen pb-20 pt-28">
+        <div className="w-full max-w-7xl px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
 
             {/* Left Column */}
@@ -243,7 +245,7 @@ const Contact: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
