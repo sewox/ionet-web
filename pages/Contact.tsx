@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
+import { useContent } from '../hooks/useContent';
 
 const Contact: React.FC = () => {
+  const { getContent } = useContent();
   const [formData, setFormData] = useState<any>({
     name: '',
     surname: '',
@@ -95,9 +97,9 @@ const Contact: React.FC = () => {
             {/* Left Column */}
             <div className="lg:col-span-5 flex flex-col gap-8">
               <div>
-                <h1 className="text-4xl font-black text-gray-900 tracking-tight mb-4">Bize Ulaşın</h1>
+                <h1 className="text-4xl font-black text-gray-900 tracking-tight mb-4">{getContent('contact_hero_title', 'Bize Ulaşın')}</h1>
                 <p className="text-lg text-gray-500 leading-relaxed">
-                  Teknoloji mimarı olarak iş süreçlerinizi dijitalleştiriyoruz. Projenizi hayata geçirmek için bizimle iletişime geçin.
+                  {getContent('contact_hero_desc', 'Teknoloji mimarı olarak iş süreçlerinizi dijitalleştiriyoruz. Projenizi hayata geçirmek için bizimle iletişime geçin.')}
                 </p>
               </div>
 
@@ -108,7 +110,7 @@ const Contact: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="font-bold text-gray-900 mb-1">Merkez Ofis</h3>
-                    <p className="text-gray-600 text-sm">Bilişim Vadisi, Muallimköy Mah.<br />Deniz Cad. No:143/5 Gebze/Kocaeli</p>
+                    <p className="text-gray-600 text-sm whitespace-pre-line">{getContent('contact_address', 'Bilişim Vadisi, Muallimköy Mah.\nDeniz Cad. No:143/5 Gebze/Kocaeli')}</p>
                   </div>
                 </div>
                 <div className="bg-surface-light rounded-xl p-5 border border-gray-200 flex items-start gap-4">
@@ -117,8 +119,8 @@ const Contact: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="font-bold text-gray-900 mb-1">Telefon</h3>
-                    <p className="text-gray-600 text-sm">+90 (262) 555 00 00</p>
-                    <p className="text-gray-400 text-xs mt-1">Hafta içi 09:00 - 18:00</p>
+                    <p className="text-gray-600 text-sm">{getContent('contact_phone', '+90 (262) 555 00 00')}</p>
+                    <p className="text-gray-400 text-xs mt-1">{getContent('contact_phone_note', 'Hafta içi 09:00 - 18:00')}</p>
                   </div>
                 </div>
                 <div className="bg-surface-light rounded-xl p-5 border border-gray-200 flex items-start gap-4">
@@ -127,8 +129,8 @@ const Contact: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="font-bold text-gray-900 mb-1">E-posta</h3>
-                    <p className="text-gray-600 text-sm">info@ionet.com.tr</p>
-                    <p className="text-gray-400 text-xs mt-1">7/24 Destek</p>
+                    <p className="text-gray-600 text-sm">{getContent('contact_email', 'info@ionet.com.tr')}</p>
+                    <p className="text-gray-400 text-xs mt-1">{getContent('contact_email_note', '7/24 Destek')}</p>
                   </div>
                 </div>
               </div>
@@ -219,9 +221,15 @@ const Contact: React.FC = () => {
       {/* Map Section */}
       <div className="h-[400px] w-full bg-gray-200 relative">
         <div className="absolute inset-0 overflow-hidden">
-          {/* Placeholder for map - styled to look corporate */}
-          <div className="w-full h-full bg-cover bg-center grayscale contrast-125" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCFgc-_ODpL0kNulGm3nVtZKP_JkAP2dq5GKxC94vYkJIy23Nn3uLoAW76U-kSKzFdHiEXab__ccztF4tX4y7cnfBQF8rOFmTF8iY4D4udpw-_L78x6Tv4zV_fHa12rWjErlfzJrjRTUHo8BXfApG_6RDUrKFVlW2TY0gHjgOSNood-2glnZs1bIIggksEqHG-k-Gutgm6JzBADIU1RdrLS87BlGUwcfNlukaymSR2wdUaUYHAYiL06rxCnodcVKq1spxvQf13FYV40')" }}></div>
-          <div className="absolute inset-0 bg-blue-900/10 mix-blend-multiply pointer-events-none"></div>
+          <iframe
+            src={getContent('contact_map_embed_url', 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3015.6888769351003!2d29.42859497645086!3d40.80066297138012!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14cb208855427131%3A0x67175440ed3c6130!2sBili%C5%9Fim%20Vadisi!5e0!3m2!1str!2str!4v1710500000000!5m2!1str!2str')}
+            width="100%"
+            height="100%"
+            style={{ border: 0, filter: 'grayscale(1) contrast(1.2) opacity(0.8)' }}
+            allowFullScreen={true}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          ></iframe>
         </div>
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
           <div className="bg-white p-4 rounded-xl shadow-xl flex flex-col items-center">
@@ -229,8 +237,8 @@ const Contact: React.FC = () => {
               <span className="material-symbols-outlined">apartment</span>
             </div>
             <div className="text-center">
-              <h4 className="font-bold text-gray-900 text-sm">Bilişim Vadisi</h4>
-              <p className="text-xs text-gray-500">I/ONET Merkez</p>
+              <h4 className="font-bold text-gray-900 text-sm">{getContent('contact_map_title', 'Bilişim Vadisi')}</h4>
+              <p className="text-xs text-gray-500">{getContent('contact_map_desc', 'I/ONET Merkez')}</p>
             </div>
           </div>
         </div>

@@ -2,6 +2,15 @@ import React, { useState } from 'react';
 import { useData, BlogPost, Job, Project } from '../../context/DataContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import ContentManager from './ContentManager';
+import MenuManager from './MenuManager';
+import FeaturesManager from './FeaturesManager';
+import ServicesManager from './ServicesManager';
+import InfrastructureManager from './InfrastructureManager';
+import ReferencesManager from './ReferencesManager';
+import CareersManager from './CareersManager';
+import LegalManager from './LegalManager';
+import TextEditor from '../../components/TextEditor';
 
 const InputField = ({ name, placeholder, value, onChange, type = "text", error }: any) => (
   <div className="mb-3">
@@ -44,7 +53,7 @@ const AdminDashboard: React.FC = () => {
     pages, addPage, deletePage
   } = useData();
 
-  const [activeTab, setActiveTab] = useState<'blog' | 'careers' | 'references' | 'pages'>('blog');
+  const [activeTab, setActiveTab] = useState<'blog' | 'careers' | 'references' | 'pages' | 'content' | 'menu' | 'features' | 'services' | 'infrastructure'>('blog');
 
   // Form States
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -82,11 +91,6 @@ const AdminDashboard: React.FC = () => {
       if (!formData.title?.trim()) errors.title = 'Sayfa başlığı zorunludur.';
       if (!formData.slug?.trim()) errors.slug = 'URL (Slug) zorunludur.';
       if (!formData.content?.trim()) errors.content = 'İçerik zorunludur.';
-    } else {
-      // References
-      if (!formData.title?.trim()) errors.title = 'Proje adı zorunludur.';
-      if (!formData.category?.trim()) errors.category = 'Sektör/Kategori zorunludur.';
-      if (!formData.description?.trim()) errors.description = 'Açıklama alanı zorunludur.';
     }
 
     setFormErrors(errors);
@@ -143,7 +147,13 @@ const AdminDashboard: React.FC = () => {
         <>
           <InputField name="title" placeholder="Başlık" value={formData.title} onChange={(e: any) => setFormData({ ...formData, title: e.target.value })} error={formErrors.title} />
           <InputField name="category" placeholder="Kategori" value={formData.category} onChange={(e: any) => setFormData({ ...formData, category: e.target.value })} error={formErrors.category} />
-          <TextAreaField name="summary" placeholder="Özet" value={formData.summary} onChange={(e: any) => setFormData({ ...formData, summary: e.target.value })} error={formErrors.summary} />
+          <InputField name="category" placeholder="Kategori" value={formData.category} onChange={(e: any) => setFormData({ ...formData, category: e.target.value })} error={formErrors.category} />
+
+          <div className="mb-3">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Özet</label>
+            <TextEditor value={formData.summary} onChange={(val) => setFormData({ ...formData, summary: val })} height="100px" />
+            {formErrors.summary && <p className="text-red-500 text-xs mt-1 font-medium">{formErrors.summary}</p>}
+          </div>
 
           {/* Image Upload Section */}
           <div className="mb-3">
@@ -186,7 +196,12 @@ const AdminDashboard: React.FC = () => {
             {formErrors.image && <p className="text-red-500 text-xs mt-1 font-medium">{formErrors.image}</p>}
           </div>
 
-          <TextAreaField name="content" placeholder="İçerik (HTML veya Text)" value={formData.content} onChange={(e: any) => setFormData({ ...formData, content: e.target.value })} height="h-32" error={formErrors.content} />
+
+          <div className="mb-3">
+            <label className="block text-sm font-medium text-gray-700 mb-1">İçerik</label>
+            <TextEditor value={formData.content} onChange={(val) => setFormData({ ...formData, content: val })} height="300px" />
+            {formErrors.content && <p className="text-red-500 text-xs mt-1 font-medium">{formErrors.content}</p>}
+          </div>
         </>
       );
     } else if (activeTab === 'careers') {
@@ -219,7 +234,12 @@ const AdminDashboard: React.FC = () => {
         <>
           <InputField name="title" placeholder="Sayfa Başlığı" value={formData.title} onChange={(e: any) => setFormData({ ...formData, title: e.target.value })} error={formErrors.title} />
           <InputField name="slug" placeholder="URL (Slug) - örn: hakkimizda" value={formData.slug} onChange={(e: any) => setFormData({ ...formData, slug: e.target.value })} error={formErrors.slug} />
-          <TextAreaField name="content" placeholder="İçerik (HTML)" value={formData.content} onChange={(e: any) => setFormData({ ...formData, content: e.target.value })} height="h-64" error={formErrors.content} />
+          <InputField name="slug" placeholder="URL (Slug) - örn: hakkimizda" value={formData.slug} onChange={(e: any) => setFormData({ ...formData, slug: e.target.value })} error={formErrors.slug} />
+          <div className="mb-3">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Sayfa İçeriği</label>
+            <TextEditor value={formData.content} onChange={(val) => setFormData({ ...formData, content: val })} height="400px" />
+            {formErrors.content && <p className="text-red-500 text-xs mt-1 font-medium">{formErrors.content}</p>}
+          </div>
         </>
       );
     } else {
@@ -227,7 +247,12 @@ const AdminDashboard: React.FC = () => {
         <>
           <InputField name="title" placeholder="Proje Adı" value={formData.title} onChange={(e: any) => setFormData({ ...formData, title: e.target.value })} error={formErrors.title} />
           <InputField name="category" placeholder="Sektör" value={formData.category} onChange={(e: any) => setFormData({ ...formData, category: e.target.value })} error={formErrors.category} />
-          <TextAreaField name="description" placeholder="Proje Açıklaması" value={formData.description} onChange={(e: any) => setFormData({ ...formData, description: e.target.value })} error={formErrors.description} />
+          <InputField name="category" placeholder="Sektör" value={formData.category} onChange={(e: any) => setFormData({ ...formData, category: e.target.value })} error={formErrors.category} />
+          <div className="mb-3">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Proje Açıklaması</label>
+            <TextEditor value={formData.description} onChange={(val) => setFormData({ ...formData, description: val })} height="150px" />
+            {formErrors.description && <p className="text-red-500 text-xs mt-1 font-medium">{formErrors.description}</p>}
+          </div>
         </>
       );
     }
@@ -264,11 +289,11 @@ const AdminDashboard: React.FC = () => {
             Kariyer / İK
           </button>
           <button
-            onClick={() => setActiveTab('references')}
-            className={`pb-3 px-2 font-medium transition-all flex items-center gap-2 ${activeTab === 'references' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
+            onClick={() => setActiveTab('legal')}
+            className={`pb-3 px-2 font-medium transition-all flex items-center gap-2 ${activeTab === 'legal' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
           >
-            <span className="material-symbols-outlined text-[20px]">business</span>
-            Referanslar
+            <span className="material-symbols-outlined text-[20px]">gavel</span>
+            Yasal (Legal)
           </button>
           <button
             onClick={() => setActiveTab('pages')}
@@ -277,68 +302,110 @@ const AdminDashboard: React.FC = () => {
             <span className="material-symbols-outlined text-[20px]">web</span>
             Sayfalar (CMS)
           </button>
+          <button
+            onClick={() => setActiveTab('content')}
+            className={`pb-3 px-2 font-medium transition-all flex items-center gap-2 ${activeTab === 'content' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            <span className="material-symbols-outlined text-[20px]">edit_document</span>
+            Site İçeriği
+          </button>
+          <button
+            onClick={() => setActiveTab('menu')}
+            className={`pb-3 px-2 font-medium transition-all flex items-center gap-2 ${activeTab === 'menu' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            <span className="material-symbols-outlined text-[20px]">menu_book</span>
+            Menü Yönetimi
+          </button>
+          <button
+            onClick={() => setActiveTab('features')}
+            className={`pb-3 px-2 font-medium transition-all flex items-center gap-2 ${activeTab === 'features' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            <span className="material-symbols-outlined text-[20px]">widgets</span>
+            Özellikler
+          </button>
+          <button
+            onClick={() => setActiveTab('services')}
+            className={`pb-3 px-2 font-medium transition-all flex items-center gap-2 ${activeTab === 'services' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            <span className="material-symbols-outlined text-[20px]">grid_view</span>
+            Hizmetler
+          </button>
+          <button
+            onClick={() => setActiveTab('infrastructure')}
+            className={`pb-3 px-2 font-medium transition-all flex items-center gap-2 ${activeTab === 'infrastructure' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            <span className="material-symbols-outlined text-[20px]">dns</span>
+            Altyapı Yönetimi
+          </button>
+          <button
+            onClick={() => setActiveTab('references')}
+            className={`pb-3 px-2 font-medium transition-all flex items-center gap-2 ${activeTab === 'references' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            <span className="material-symbols-outlined text-[20px]">workspace_premium</span>
+            Referanslar
+          </button>
         </div>
 
         {/* Content Area */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-800">
-              {activeTab === 'blog' ? 'Blog Yazıları' : activeTab === 'careers' ? 'Açık Pozisyonlar' : activeTab === 'pages' ? 'Sayfalar' : 'Projeler'}
-            </h2>
-            <button onClick={() => setIsModalOpen(true)} className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2">
-              <span className="material-symbols-outlined text-sm">add</span> Yeni Ekle
-            </button>
-          </div>
+        {activeTab === 'content' ? (
+          <ContentManager />
+        ) : activeTab === 'menu' ? (
+          <MenuManager />
+        ) : activeTab === 'careers' ? (
+          <CareersManager />
+        ) : activeTab === 'legal' ? (
+          <LegalManager />
+        ) : activeTab === 'features' ? (
+          <FeaturesManager />
+        ) : activeTab === 'services' ? (
+          <ServicesManager />
+        ) : activeTab === 'infrastructure' ? (
+          <InfrastructureManager />
+        ) : activeTab === 'references' ? (
+          <ReferencesManager />
+        ) : (
+          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-gray-800">
+                {activeTab === 'blog' ? 'Blog Yazıları' : activeTab === 'pages' ? 'Sayfalar' : 'Projeler'}
+              </h2>
+              <button onClick={() => setIsModalOpen(true)} className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2">
+                <span className="material-symbols-outlined text-sm">add</span> Yeni Ekle
+              </button>
+            </div>
 
-          {/* Lists */}
-          <div className="space-y-4">
-            {activeTab === 'blog' && blogPosts.map(post => (
-              <div key={post.id} className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50">
-                <div className="flex items-center gap-4">
-                  <img src={post.image} className="w-12 h-12 rounded object-cover" alt="" />
+            {/* Lists */}
+            <div className="space-y-4">
+              {activeTab === 'blog' && blogPosts.map(post => (
+                <div key={post.id} className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50">
+                  <div className="flex items-center gap-4">
+                    <img src={post.image} className="w-12 h-12 rounded object-cover" alt="" />
+                    <div>
+                      <h3 className="font-bold text-gray-900">{post.title}</h3>
+                      <p className="text-xs text-gray-500">{post.category} • {post.date}</p>
+                    </div>
+                  </div>
+                  <button onClick={() => deleteBlogPost(post.id)} className="text-gray-400 hover:text-red-500"><span className="material-symbols-outlined">delete</span></button>
+                </div>
+              ))}
+              {activeTab === 'pages' && pages.map(page => (
+                <div key={page.id} className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50">
                   <div>
-                    <h3 className="font-bold text-gray-900">{post.title}</h3>
-                    <p className="text-xs text-gray-500">{post.category} • {post.date}</p>
+                    <h3 className="font-bold text-gray-900">{page.title}</h3>
+                    <p className="text-xs text-gray-500">/{page.slug}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <a href={`/#/${page.slug}`} target="_blank" className="text-gray-400 hover:text-primary"><span className="material-symbols-outlined">visibility</span></a>
+                    <button onClick={() => deletePage(page.id)} className="text-gray-400 hover:text-red-500"><span className="material-symbols-outlined">delete</span></button>
                   </div>
                 </div>
-                <button onClick={() => deleteBlogPost(post.id)} className="text-gray-400 hover:text-red-500"><span className="material-symbols-outlined">delete</span></button>
-              </div>
-            ))}
-            {activeTab === 'careers' && jobs.map(job => (
-              <div key={job.id} className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50">
-                <div>
-                  <h3 className="font-bold text-gray-900">{job.title}</h3>
-                  <p className="text-xs text-gray-500">{job.department} • {job.location}</p>
-                </div>
-                <button onClick={() => deleteJob(job.id)} className="text-gray-400 hover:text-red-500"><span className="material-symbols-outlined">delete</span></button>
-              </div>
-            ))}
-            {activeTab === 'references' && projects.map(proj => (
-              <div key={proj.id} className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50">
-                <div>
-                  <h3 className="font-bold text-gray-900">{proj.title}</h3>
-                  <p className="text-xs text-gray-500">{proj.category}</p>
-                </div>
-                <button onClick={() => deleteProject(proj.id)} className="text-gray-400 hover:text-red-500"><span className="material-symbols-outlined">delete</span></button>
-              </div>
-            ))}
-            {activeTab === 'pages' && pages.map(page => (
-              <div key={page.id} className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50">
-                <div>
-                  <h3 className="font-bold text-gray-900">{page.title}</h3>
-                  <p className="text-xs text-gray-500">/{page.slug}</p>
-                </div>
-                <div className="flex gap-2">
-                  <a href={`/#/${page.slug}`} target="_blank" className="text-gray-400 hover:text-primary"><span className="material-symbols-outlined">visibility</span></a>
-                  <button onClick={() => deletePage(page.id)} className="text-gray-400 hover:text-red-500"><span className="material-symbols-outlined">delete</span></button>
-                </div>
-              </div>
-            ))}
-            {((activeTab === 'blog' && blogPosts.length === 0) || (activeTab === 'careers' && jobs.length === 0) || (activeTab === 'references' && projects.length === 0) || (activeTab === 'pages' && pages.length === 0)) && (
-              <div className="text-center py-10 text-gray-400">Kayıt bulunamadı.</div>
-            )}
+              ))}
+              {((activeTab === 'blog' && blogPosts.length === 0) || (activeTab === 'careers' && jobs.length === 0) || (activeTab === 'pages' && pages.length === 0)) && (
+                <div className="text-center py-10 text-gray-400">Kayıt bulunamadı.</div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Modal */}

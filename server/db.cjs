@@ -54,6 +54,86 @@ async function getDb() {
       message TEXT, 
       date TEXT
     );
+
+    CREATE TABLE IF NOT EXISTS site_settings (
+      id TEXT PRIMARY KEY,
+      ckey TEXT UNIQUE,
+      value TEXT,
+      group_name TEXT,
+      type TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS menu_items (
+      id TEXT PRIMARY KEY,
+      label TEXT,
+      url TEXT,
+      order_index INTEGER
+    );
+
+    CREATE TABLE IF NOT EXISTS home_features (
+      id TEXT PRIMARY KEY,
+      title TEXT,
+      description TEXT,
+      icon TEXT,
+      order_index INTEGER
+    );
+
+    CREATE TABLE IF NOT EXISTS home_services (
+      id TEXT PRIMARY KEY,
+      title TEXT,
+      description TEXT,
+      icon TEXT,
+      link TEXT,
+      order_index INTEGER
+    );
+
+    CREATE TABLE IF NOT EXISTS infrastructure_features (
+      id TEXT PRIMARY KEY,
+      title TEXT,
+      description TEXT,
+      icon TEXT,
+      points TEXT,
+      order_index INTEGER
+    );
+
+    CREATE TABLE IF NOT EXISTS tech_partners (
+      id TEXT PRIMARY KEY,
+      name TEXT,
+      icon TEXT,
+      order_index INTEGER
+    );
+
+    CREATE TABLE IF NOT EXISTS testimonials (
+      id TEXT PRIMARY KEY,
+      name TEXT,
+      title TEXT,
+      quote TEXT,
+      image TEXT,
+      order_index INTEGER
+    );
+
+    CREATE TABLE IF NOT EXISTS career_values (
+      id TEXT PRIMARY KEY,
+      title TEXT,
+      description TEXT,
+      icon TEXT,
+      order_index INTEGER
+    );
+
+    CREATE TABLE IF NOT EXISTS career_tech_stack (
+      id TEXT PRIMARY KEY,
+      name TEXT,
+      icon TEXT,
+      order_index INTEGER
+    );
+
+    CREATE TABLE IF NOT EXISTS legal_sections (
+      id TEXT PRIMARY KEY,
+      title TEXT,
+      content TEXT,
+      anchor TEXT,
+      order_index INTEGER
+    );
   `);
 
   return db;
