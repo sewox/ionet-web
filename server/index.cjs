@@ -28,7 +28,7 @@ const PORT = process.env.PORT || 3001;
 
 // CORS Configuration - restrict to allowed origins
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
-    ? process.env.ALLOWED_ORIGINS.split(',') 
+    ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
     : ['http://localhost:5173', 'http://localhost:3001'];
 
 app.use(cors({
@@ -181,6 +181,7 @@ const createCrud = (table, fields, excludeMethods = []) => {
                     // Sanitize inputs to prevent XSS
                     if (name && name.length > 100) return res.status(400).json({ error: "Name too long" });
                     if (surname && surname.length > 100) return res.status(400).json({ error: "Surname too long" });
+                    if (phone && phone.length > 50) return res.status(400).json({ error: "Phone too long" });
                     if (message && message.length > 5000) return res.status(400).json({ error: "Message too long" });
                     
                     // Sanitize HTML content
@@ -229,7 +230,7 @@ const createCrud = (table, fields, excludeMethods = []) => {
                             // Use environment variables for fallback SMTP
                             transporter = nodemailer.createTransport({
                                 host: process.env.SMTP_HOST || "smtp.ethereal.email",
-                                port: parseInt(process.env.SMTP_PORT) || 587,
+                                port: parseInt(process.env.SMTP_PORT, 10) || 587,
                                 secure: process.env.SMTP_SECURE === 'true',
                                 auth: { 
                                     user: process.env.SMTP_USER || "test@ethereal.email", 
@@ -336,6 +337,11 @@ const createCrud = (table, fields, excludeMethods = []) => {
 app.post('/api/auth/login', authLimiter, async (req, res) => {
     const { password } = req.body;
     
+    // Validate password is provided
+    if (!password) {
+        return res.status(400).json({ success: false, message: 'Password required' });
+    }
+    
     try {
         // Get hashed password from environment
         const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
@@ -390,7 +396,7 @@ app.use('/api/messages', createCrud('messages', ['id', 'name', 'surname', 'email
 const settingsRouter = express.Router();
 
 // Sensitive keys that should never be exposed to non-authenticated users
-const SENSITIVE_KEYS = ['smtp_pass', 'smtp_user', 'Gemini_API', 'api_key', 'secret', 'password', 'token'];
+const SENSITIVE_KEYS = ['smtp_pass', 'smtp_user', 'gemini_api', 'api_key', 'secret', 'password', 'token'];
 
 settingsRouter.get('/', async (req, res) => {
     try {
@@ -417,9 +423,14 @@ settingsRouter.get('/', async (req, res) => {
         const filteredRows = isAuthenticated 
             ? rows 
             : rows.filter(row => {
-                // Check if the key contains any sensitive keyword
+                // Check if the key contains any sensitive keyword (case-insensitive)
                 const keyLower = row.ckey.toLowerCase();
-                return !SENSITIVE_KEYS.some(sensitive => keyLower === sensitive || keyLower.endsWith('_' + sensitive));
+                return !SENSITIVE_KEYS.some(sensitive => {
+                    const sensitiveLower = String(sensitive).toLowerCase();
+                    return keyLower === sensitiveLower || 
+                           keyLower.endsWith('_' + sensitiveLower) ||
+                           keyLower.startsWith(sensitiveLower + '_');
+                });
             });
         
         res.json(filteredRows);
@@ -484,9 +495,9 @@ if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Allowed file types for upload
+// Allowed file types for upload (SVG removed due to XSS risk)
 const ALLOWED_FILE_TYPES = [
-    'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
+    'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
     'application/pdf'
 ];
 
@@ -512,7 +523,7 @@ const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
     limits: {
-        fileSize: parseInt(process.env.MAX_FILE_SIZE) || 52428800 // 50MB default
+        fileSize: parseInt(process.env.MAX_FILE_SIZE, 10) || 52428800 // 50MB default
     }
 });
 

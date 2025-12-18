@@ -14,9 +14,13 @@ Copy `.env.example` to `.env` and configure the following variables:
 
 2. **ADMIN_PASSWORD_HASH**: Bcrypt hash of the admin password
    ```bash
-   # Generate password hash:
-   node server/generate-password-hash.cjs your-secure-password
+   # Generate password hash (prompts for password interactively):
+   node server/generate-password-hash.cjs
    ```
+   Copy the output and add it to `.env` as `ADMIN_PASSWORD_HASH=<hash>`.
+
+   > **Security Note:** The script prompts for the password interactively to avoid
+   > storing it in shell history or exposing it in process listings.
 
 3. **ALLOWED_ORIGINS**: Comma-separated list of allowed CORS origins
    ```
@@ -54,8 +58,9 @@ The system checks the database first for email configuration. If not found, it f
 
 3. Generate an admin password hash:
    ```bash
-   node server/generate-password-hash.cjs YourSecurePassword123!
+   node server/generate-password-hash.cjs
    ```
+   Enter your password when prompted (input will be hidden for security).
    Copy the output and add it to `.env` as `ADMIN_PASSWORD_HASH=<hash>`
 
 4. Update ALLOWED_ORIGINS with your frontend URL
