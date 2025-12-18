@@ -10,6 +10,7 @@ const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const validator = require('validator');
 const xss = require('xss');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 // Validate required environment variables on startup
@@ -45,6 +46,34 @@ app.use(cors({
 
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use('/uploads', express.static(path.join(__dirname, process.env.UPLOAD_DIR || 'uploads')));
+
+// Rate limiting
+const generalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // Limit each IP to 5 login attempts per windowMs
+    message: 'Too many login attempts, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const uploadLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 20, // Limit file uploads
+    message: 'Too many upload requests, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Apply general rate limiter to all routes
+app.use(generalLimiter);
 
 // Middleware to attach DB to request
 app.use(async (req, res, next) => {
@@ -303,8 +332,8 @@ const createCrud = (table, fields, excludeMethods = []) => {
     return router;
 };
 
-// Login Endpoint - JWT based authentication
-app.post('/api/auth/login', async (req, res) => {
+// Login Endpoint - JWT based authentication with rate limiting
+app.post('/api/auth/login', authLimiter, async (req, res) => {
     const { password } = req.body;
     
     try {
@@ -487,7 +516,7 @@ const upload = multer({
     }
 });
 
-app.post('/api/upload', authenticate, upload.single('file'), (req, res) => {
+app.post('/api/upload', uploadLimiter, authenticate, upload.single('file'), (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
     const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
     res.json({ url: fileUrl });
