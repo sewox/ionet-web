@@ -1,0 +1,17 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME} !-l
+  RewriteRule . /index.html [L]
+</IfModule>
+
+# Optional: Proxy API requests to Node.js backend (if running on port 3001)
+# Uncomment the following lines if you have mod_proxy and mod_proxy_http enabled
+# <IfModule mod_proxy.c>
+#     ProxyRequests Off
+#     ProxyPass /api http://localhost:3001/api
+#     ProxyPassReverse /api http://localhost:3001/api
+# </IfModule>

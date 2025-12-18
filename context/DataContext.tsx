@@ -29,238 +29,347 @@ export interface Project {
   image?: string;
 }
 
+export interface Page {
+  id: string;
+  slug: string;
+  title: string;
+  content: string;
+  created_at?: string;
+}
+
+export interface Message {
+  id: string;
+  name: string;
+  surname: string;
+  email: string;
+  phone: string;
+  message: string;
+  date: string;
+}
+
+export interface SiteSetting {
+  id: string;
+  ckey: string;
+  value: string;
+  group_name: string;
+  type: 'text' | 'long_text' | 'image';
+}
+
+export interface MenuItem {
+  id: string;
+  label: string;
+  url: string;
+  order_index: number;
+}
+
+export interface Feature {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  order_index: number;
+}
+
+export interface ServiceItem {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  link: string;
+  order_index: number;
+}
+
+export interface InfraFeature {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  points: string; // newline separated
+  order_index: number;
+}
+
+export interface TechPartner {
+  id: string;
+  name: string;
+  icon: string;
+  order_index: number;
+}
+
+export interface Testimonial {
+  id: string;
+  name: string;
+  title: string;
+  quote: string;
+  image: string;
+  order_index: number;
+}
+
+export interface CareerValue {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  order_index: number;
+}
+
+export interface CareerTech {
+  id: string;
+  name: string;
+  icon: string;
+  order_index: number;
+}
+
+export interface LegalSection {
+  id: string;
+  title: string;
+  content: string;
+  anchor: string;
+  order_index: number;
+}
+
 interface DataContextType {
   blogPosts: BlogPost[];
   jobs: Job[];
   projects: Project[];
-  addBlogPost: (post: BlogPost) => void;
-  deleteBlogPost: (id: string) => void;
-  addJob: (job: Job) => void;
-  deleteJob: (id: string) => void;
-  addProject: (project: Project) => void;
-  deleteProject: (id: string) => void;
+  pages: Page[];
+  messages: Message[];
+  siteSettings: SiteSetting[];
+  menuItems: MenuItem[];
+  homeFeatures: Feature[];
+  homeServices: ServiceItem[];
+  infraFeatures: InfraFeature[];
+  techPartners: TechPartner[];
+  testimonials: Testimonial[];
+  careerValues: CareerValue[];
+  careerTechStack: CareerTech[];
+  legalSections: LegalSection[];
+  addBlogPost: (post: BlogPost) => Promise<void>;
+  updateBlogPost: (post: BlogPost) => Promise<void>;
+  deleteBlogPost: (id: string) => Promise<void>;
+  addJob: (job: Job) => Promise<void>;
+  updateJob: (job: Job) => Promise<void>;
+  deleteJob: (id: string) => Promise<void>;
+  addProject: (project: Project) => Promise<void>;
+  updateProject: (project: Project) => Promise<void>;
+  deleteProject: (id: string) => Promise<void>;
+  addPage: (page: Page) => Promise<void>;
+  updatePage: (page: Page) => Promise<void>;
+  deletePage: (id: string) => Promise<void>;
+  sendMessage: (msg: Message) => Promise<void>;
+  deleteMessage: (id: string) => Promise<void>;
+  updateSetting: (key: string, value: string, group?: string, type?: 'text' | 'long_text' | 'image') => Promise<void>;
+  deleteSetting: (key: string) => Promise<void>;
+  addMenuItem: (item: MenuItem) => Promise<void>;
+  updateMenuItem: (item: MenuItem) => Promise<void>;
+  deleteMenuItem: (id: string) => Promise<void>;
+  addFeature: (feature: Feature) => Promise<void>;
+  updateFeature: (feature: Feature) => Promise<void>;
+  deleteFeature: (id: string) => Promise<void>;
+  addService: (service: ServiceItem) => Promise<void>;
+  updateService: (service: ServiceItem) => Promise<void>;
+  deleteService: (id: string) => Promise<void>;
+  addInfraFeature: (feature: InfraFeature) => Promise<void>;
+  updateInfraFeature: (feature: InfraFeature) => Promise<void>;
+  deleteInfraFeature: (id: string) => Promise<void>;
+  addTechPartner: (partner: TechPartner) => Promise<void>;
+  updateTechPartner: (partner: TechPartner) => Promise<void>;
+  deleteTechPartner: (id: string) => Promise<void>;
+  addTestimonial: (testimonial: Testimonial) => Promise<void>;
+  updateTestimonial: (testimonial: Testimonial) => Promise<void>;
+  deleteTestimonial: (id: string) => Promise<void>;
+  addCareerValue: (val: CareerValue) => Promise<void>;
+  updateCareerValue: (val: CareerValue) => Promise<void>;
+  deleteCareerValue: (id: string) => Promise<void>;
+  addCareerTech: (tech: CareerTech) => Promise<void>;
+  updateCareerTech: (tech: CareerTech) => Promise<void>;
+  deleteCareerTech: (id: string) => Promise<void>;
+  addLegalSection: (sec: LegalSection) => Promise<void>;
+  updateLegalSection: (sec: LegalSection) => Promise<void>;
+  deleteLegalSection: (id: string) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-// Initial Data
-const initialBlogPosts: BlogPost[] = [
-  {
-    id: '1',
-    category: 'Yapay Zeka',
-    date: '2 Kasım 2023',
-    title: 'Generative AI: İş Dünyasında Yeni Bir Dönem',
-    summary: 'Üretken yapay zekanın otomasyon ve yaratıcı süreçlerdeki devrimsel etkilerini inceliyoruz.',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDv9y8yk-6nS83U92rNrN33NrOCuD9QXx0R3hAy0Sm26aFEV7OBnSWqscGPX2KWEF8V95YssQvz3QBdyUL4F4pSeBD933om82oXEFambnZwZREDqL_4MgLCTjSwJ99AnmRsxhh7CqyF71Y0SHXPSyXsj-xCJZgk_vE15DKmRjca1jkAH-2uCUe5jSQ0sikwhY6Hb_gBao9BW4CgmGwwGllh1-PNkrwu-A8pYXuAcoutBrlxrZwB0vIIj7qQcVmFrSg5AnAr9bwa3_ak',
-    content: 'Generative AI içeriği buraya gelecek...'
-  },
-  {
-    id: '2',
-    category: 'Siber Güvenlik',
-    date: '28 Ekim 2023',
-    title: 'Sıfır Güven (Zero Trust) Mimarisine Geçiş',
-    summary: 'Geleneksel ağ güvenliği modellerinin yerini alan Zero Trust yaklaşımının temel prensipleri.',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA36eoYAQIvBio9r_aIUu7CATagqffdaSfWY6i0IvSvW3GL1_4YoFDgQnc5JzqZMKfy4jbkQkDxQRG4yuEQbHGFQ8Z4g_xgj_tO5J-dYHz0RBeEA3Wo6OLRlP2tVbhV6xAcItw4CggAOu6HqV9-0TRCluN9Ka70-S_klANa4OWLh6PdBIjDJ2rMrU-XgzXbTdllnHwaxLUqUZd_vJFgylKrZMTo-1TkXdQPXBEobZqG-G8OK-4xXA0pgfAFHGeBDxcdI_3uiYD0310b',
-    content: 'Zero Trust detayları...'
-  },
-  {
-    id: '3',
-    category: 'Altyapı',
-    date: '24 Ekim 2023',
-    title: 'Kurumsal Veri Mimarisi ve Geleceğin Altyapıları',
-    summary: 'Modern işletmeler için veri mimarisi stratejileri.',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAjcya9GokW1VO3X49deC0WhxinBkE4BsTeBiIDO-ouukrtCnZvVR7NAjTOVcLnAGllI-qieD_PaCwawjujpqo--OkDPBMhe6_nap-rAEkh1VPO36h_Ce93RK_fzsTDRF3oxdIqURBR0w7-7D9hN5Jt9hUNBe34zaIM2l7mHFveJEpcv1i8R9S4c-yiajqaSoWhlEjE68p4_C8-wrigZPym_rp4ULogW2hfvJaI_Js2ROKKd_6Z0qWTeUN4ZQcGxypjD2xK2GSnPPh6',
-    content: `Modern işletmeler için veri mimarisi, sadece bir depolama stratejisi değil...`
-  }
-];
-
-const initialJobs: Job[] = [
-  {
-    id: '1',
-    title: 'Senior Backend Developer (Java/Spring)',
-    department: 'Yazılım',
-    location: 'İstanbul (Bilişim Vadisi)',
-    time: 'Tam Zamanlı',
-    type: 'Uzaktan',
-    exp: '5+ Yıl Deneyim'
-  },
-  {
-    id: '2',
-    title: 'DevOps Engineer',
-    department: 'Altyapı',
-    location: 'Uzaktan',
-    time: 'Tam Zamanlı',
-    type: 'Uzaktan',
-    exp: '3+ Yıl Deneyim'
-  },
-  {
-    id: '3',
-    title: 'Frontend Architect (React/Vue)',
-    department: 'Yazılım',
-    location: 'İstanbul (Bilişim Vadisi)',
-    time: 'Tam Zamanlı',
-    type: 'Hibrit',
-    exp: '6+ Yıl Deneyim'
-  }
-];
-
-const initialProjects: Project[] = [
-  {
-    id: '1',
-    title: 'MegaMarket Zincirleri',
-    category: 'Perakende',
-    description: '500 mağazanın stok yönetim sisteminin bulut tabanlı merkezi bir yapıya taşınması.'
-  },
-  {
-    id: '2',
-    title: 'Global Lojistik A.Ş.',
-    category: 'Lojistik',
-    description: 'IoT sensörleri ile filo takibi ve yapay zeka destekli rota optimizasyonu projesi.'
-  },
-  {
-    id: '3',
-    title: 'Anadolu Enerji Dağıtım',
-    category: 'Enerji',
-    description: 'Akıllı şebeke (Smart Grid) yönetimi için SCADA sistemlerinin modernizasyonu.'
-  }
-];
-
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [db, setDb] = useState<any>(null);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [pages, setPages] = useState<Page[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [siteSettings, setSiteSettings] = useState<SiteSetting[]>([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [homeFeatures, setHomeFeatures] = useState<Feature[]>([]);
+  const [homeServices, setHomeServices] = useState<ServiceItem[]>([]);
+  const [infraFeatures, setInfraFeatures] = useState<InfraFeature[]>([]);
+  const [techPartners, setTechPartners] = useState<TechPartner[]>([]);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [careerValues, setCareerValues] = useState<CareerValue[]>([]);
+  const [careerTechStack, setCareerTechStack] = useState<CareerTech[]>([]);
+  const [legalSections, setLegalSections] = useState<LegalSection[]>([]);
 
-  // Initialize SQLite DB
-  useEffect(() => {
-    const initDB = async () => {
-      // @ts-ignore
-      if (!window.initSqlJs) return;
-      
-      try {
-        // @ts-ignore
-        const SQL = await window.initSqlJs({
-          locateFile: (file: string) => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`
-        });
-
-        const savedDb = localStorage.getItem('sqliteDb');
-        let database;
-
-        if (savedDb) {
-           const u8 = new Uint8Array(JSON.parse(savedDb));
-           database = new SQL.Database(u8);
-        } else {
-           database = new SQL.Database();
-           
-           // Initialize Tables
-           database.run("CREATE TABLE IF NOT EXISTS blog_posts (id TEXT PRIMARY KEY, title TEXT, category TEXT, date TEXT, summary TEXT, image TEXT, content TEXT)");
-           database.run("CREATE TABLE IF NOT EXISTS jobs (id TEXT PRIMARY KEY, title TEXT, type TEXT, location TEXT, time TEXT, exp TEXT, department TEXT)");
-           database.run("CREATE TABLE IF NOT EXISTS projects (id TEXT PRIMARY KEY, title TEXT, category TEXT, description TEXT, image TEXT)");
-           
-           // Insert Initial Data
-           initialBlogPosts.forEach(p => {
-             database.run("INSERT INTO blog_posts VALUES (?,?,?,?,?,?,?)", [p.id, p.title, p.category, p.date, p.summary, p.image, p.content]);
-           });
-           initialJobs.forEach(j => {
-             database.run("INSERT INTO jobs VALUES (?,?,?,?,?,?,?)", [j.id, j.title, j.type, j.location, j.time, j.exp, j.department]);
-           });
-           initialProjects.forEach(p => {
-             database.run("INSERT INTO projects VALUES (?,?,?,?,?)", [p.id, p.title, p.category, p.description, p.image || ""]);
-           });
-        }
-        
-        setDb(database);
-        refreshData(database);
-      } catch (err) {
-        console.error("Failed to init database:", err);
-      }
-    };
-
-    initDB();
-  }, []);
-
-  // Helper to convert SQL result to array of objects
-  const resultToObjects = (execResult: any) => {
-    if (!execResult || execResult.length === 0) return [];
-    const columns = execResult[0].columns;
-    const values = execResult[0].values;
-    return values.map((row: any[]) => {
-      const obj: any = {};
-      columns.forEach((col: string, i: number) => {
-        obj[col] = row[i];
-      });
-      return obj;
-    });
-  };
-
-  const refreshData = (database: any) => {
-    if (!database) return;
-    
+  const fetchData = async () => {
     try {
-      const postsRes = database.exec("SELECT * FROM blog_posts");
-      setBlogPosts(resultToObjects(postsRes) as BlogPost[]);
-
-      const jobsRes = database.exec("SELECT * FROM jobs");
-      setJobs(resultToObjects(jobsRes) as Job[]);
-
-      const projectsRes = database.exec("SELECT * FROM projects");
-      setProjects(resultToObjects(projectsRes) as Project[]);
-    } catch(e) {
-      console.error("Error fetching data", e);
+      const [postsRes, jobsRes, projRes, pagesRes, msgRes, settingsRes, menuRes, featureRes, serviceRes, infraRes, partnerRes, testimonialsRes, cValuesRes, cTechRes, legalRes] = await Promise.all([
+        fetch('/api/blog_posts').then(r => r.json()),
+        fetch('/api/jobs').then(r => r.json()),
+        fetch('/api/projects').then(r => r.json()),
+        fetch('/api/pages').then(r => r.json()),
+        fetch('/api/messages').then(r => r.json()),
+        fetch('/api/settings').then(r => r.json()),
+        fetch('/api/menu_items').then(r => r.json()),
+        fetch('/api/home_features').then(r => r.json()),
+        fetch('/api/home_services').then(r => r.json()),
+        fetch('/api/infrastructure_features').then(r => r.json()),
+        fetch('/api/tech_partners').then(r => r.json()),
+        fetch('/api/testimonials').then(r => r.json()),
+        fetch('/api/career_values').then(r => r.json()),
+        fetch('/api/career_tech_stack').then(r => r.json()),
+        fetch('/api/legal_sections').then(r => r.json())
+      ]);
+      setBlogPosts(postsRes || []);
+      setJobs(jobsRes || []);
+      setProjects(projRes || []);
+      setPages(pagesRes || []);
+      setMessages(msgRes || []);
+      setSiteSettings(settingsRes || []);
+      setMenuItems((menuRes || []).sort((a: MenuItem, b: MenuItem) => a.order_index - b.order_index));
+      setHomeFeatures((featureRes || []).sort((a: Feature, b: Feature) => a.order_index - b.order_index));
+      setHomeServices((serviceRes || []).sort((a: ServiceItem, b: ServiceItem) => a.order_index - b.order_index));
+      setInfraFeatures((infraRes || []).sort((a: InfraFeature, b: InfraFeature) => a.order_index - b.order_index));
+      setTechPartners((partnerRes || []).sort((a: TechPartner, b: TechPartner) => a.order_index - b.order_index));
+      setTestimonials((testimonialsRes || []).sort((a: Testimonial, b: Testimonial) => a.order_index - b.order_index));
+      setCareerValues((cValuesRes || []).sort((a: CareerValue, b: CareerValue) => a.order_index - b.order_index));
+      setCareerTechStack((cTechRes || []).sort((a: CareerTech, b: CareerTech) => a.order_index - b.order_index));
+      setLegalSections((legalRes || []).sort((a: LegalSection, b: LegalSection) => a.order_index - b.order_index));
+    } catch (error) {
+      console.error("Failed to fetch data", error);
     }
   };
 
-  const saveDb = (database: any) => {
-    if (!database) return;
-    const data = database.export();
-    const arr = Array.from(data);
-    localStorage.setItem('sqliteDb', JSON.stringify(arr));
-    refreshData(database);
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // API Helpers...
+  const getHeaders = () => {
+    const token = localStorage.getItem('authToken');
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : ''
+    };
+  };
+
+  const postData = async (url: string, data: any) => {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'İşlem başarısız oldu');
+    }
+    fetchData();
+  };
+
+  const updateData = async (url: string, data: any) => {
+    const res = await fetch(url + '/' + data.id, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Update Failed');
+    fetchData(); // Refresh data
+  };
+
+  const deleteData = async (url: string) => {
+    const res = await fetch(url, {
+      method: 'DELETE',
+      headers: getHeaders()
+    });
+    if (!res.ok) throw new Error('Delete Failed');
+    fetchData();
   };
 
   // Actions
-  const addBlogPost = (post: BlogPost) => {
-    if (!db) return;
-    db.run("INSERT INTO blog_posts VALUES (?,?,?,?,?,?,?)", [post.id, post.title, post.category, post.date, post.summary, post.image, post.content || ""]);
-    saveDb(db);
-  };
+  const addBlogPost = async (post: BlogPost) => postData('/api/blog_posts', post);
+  const updateBlogPost = async (post: BlogPost) => updateData('/api/blog_posts', post);
+  const deleteBlogPost = async (id: string) => deleteData(`/api/blog_posts/${id}`);
 
-  const deleteBlogPost = (id: string) => {
-    if (!db) return;
-    db.run("DELETE FROM blog_posts WHERE id = ?", [id]);
-    saveDb(db);
-  };
+  const addJob = async (job: Job) => postData('/api/jobs', job);
+  const updateJob = async (job: Job) => updateData('/api/jobs', job);
+  const deleteJob = async (id: string) => deleteData(`/api/jobs/${id}`);
 
-  const addJob = (job: Job) => {
-    if (!db) return;
-    db.run("INSERT INTO jobs VALUES (?,?,?,?,?,?,?)", [job.id, job.title, job.type, job.location, job.time, job.exp, job.department]);
-    saveDb(db);
-  };
+  const addProject = async (project: Project) => postData('/api/projects', project);
+  const updateProject = async (project: Project) => updateData('/api/projects', project);
+  const deleteProject = async (id: string) => deleteData(`/api/projects/${id}`);
 
-  const deleteJob = (id: string) => {
-    if (!db) return;
-    db.run("DELETE FROM jobs WHERE id = ?", [id]);
-    saveDb(db);
-  };
+  const addPage = async (page: Page) => postData('/api/pages', page);
+  const updatePage = async (page: Page) => updateData('/api/pages', page);
+  const deletePage = async (id: string) => deleteData(`/api/pages/${id}`);
 
-  const addProject = (project: Project) => {
-    if (!db) return;
-    db.run("INSERT INTO projects VALUES (?,?,?,?,?)", [project.id, project.title, project.category, project.description, project.image || ""]);
-    saveDb(db);
-  };
+  const sendMessage = async (msg: Message) => postData('/api/messages', msg);
+  const deleteMessage = async (id: string) => deleteData(`/api/messages/${id}`);
 
-  const deleteProject = (id: string) => {
-    if (!db) return;
-    db.run("DELETE FROM projects WHERE id = ?", [id]);
-    saveDb(db);
+  const updateSetting = async (ckey: string, value: string, group_name: string = 'general', type: 'text' | 'long_text' | 'image' = 'text') => {
+    await postData('/api/settings', { ckey, value, group_name, type });
   };
+  const deleteSetting = async (ckey: string) => deleteData(`/api/settings/${ckey}`);
+
+  const addMenuItem = async (item: MenuItem) => postData('/api/menu_items', item);
+  const updateMenuItem = async (item: MenuItem) => updateData('/api/menu_items', item);
+  const deleteMenuItem = async (id: string) => deleteData(`/api/menu_items/${id}`);
+
+  const addFeature = async (feature: Feature) => postData('/api/home_features', feature);
+  const updateFeature = async (feature: Feature) => updateData('/api/home_features', feature);
+  const deleteFeature = async (id: string) => deleteData(`/api/home_features/${id}`);
+
+  const addService = async (service: ServiceItem) => postData('/api/home_services', service);
+  const updateService = async (service: ServiceItem) => updateData('/api/home_services', service);
+  const deleteService = async (id: string) => deleteData(`/api/home_services/${id}`);
+
+  const addInfraFeature = async (feature: InfraFeature) => postData('/api/infrastructure_features', feature);
+  const updateInfraFeature = async (feature: InfraFeature) => updateData('/api/infrastructure_features', feature);
+  const deleteInfraFeature = async (id: string) => deleteData(`/api/infrastructure_features/${id}`);
+
+  const addTechPartner = async (partner: TechPartner) => postData('/api/tech_partners', partner);
+  const updateTechPartner = async (partner: TechPartner) => updateData('/api/tech_partners', partner);
+  const deleteTechPartner = async (id: string) => deleteData(`/api/tech_partners/${id}`);
+
+  const addTestimonial = async (testimonial: Testimonial) => postData('/api/testimonials', testimonial);
+  const updateTestimonial = async (testimonial: Testimonial) => updateData('/api/testimonials', testimonial);
+  const deleteTestimonial = async (id: string) => deleteData(`/api/testimonials/${id}`);
+
+  const addCareerValue = async (val: CareerValue) => postData('/api/career_values', val);
+  const updateCareerValue = async (val: CareerValue) => updateData('/api/career_values', val);
+  const deleteCareerValue = async (id: string) => deleteData(`/api/career_values/${id}`);
+
+  const addCareerTech = async (tech: CareerTech) => postData('/api/career_tech_stack', tech);
+  const updateCareerTech = async (tech: CareerTech) => updateData('/api/career_tech_stack', tech);
+  const deleteCareerTech = async (id: string) => deleteData(`/api/career_tech_stack/${id}`);
+
+  const addLegalSection = async (sec: LegalSection) => postData('/api/legal_sections', sec);
+  const updateLegalSection = async (sec: LegalSection) => updateData('/api/legal_sections', sec);
+  const deleteLegalSection = async (id: string) => deleteData(`/api/legal_sections/${id}`);
 
   return (
     <DataContext.Provider value={{
-      blogPosts, jobs, projects,
-      addBlogPost, deleteBlogPost,
-      addJob, deleteJob,
-      addProject, deleteProject
+      blogPosts, jobs, projects, pages, messages, siteSettings, menuItems, homeFeatures, homeServices, infraFeatures, techPartners, testimonials, careerValues, careerTechStack, legalSections,
+      addBlogPost, updateBlogPost, deleteBlogPost,
+      addJob, updateJob, deleteJob,
+      addProject, updateProject, deleteProject,
+      addPage, updatePage, deletePage,
+      sendMessage, deleteMessage,
+      updateSetting, deleteSetting,
+      addMenuItem, updateMenuItem, deleteMenuItem,
+      addFeature, updateFeature, deleteFeature,
+      addService, updateService, deleteService,
+      addInfraFeature, updateInfraFeature, deleteInfraFeature,
+      addTechPartner, updateTechPartner, deleteTechPartner,
+      addTestimonial, updateTestimonial, deleteTestimonial,
+      addCareerValue, updateCareerValue, deleteCareerValue,
+      addCareerTech, updateCareerTech, deleteCareerTech,
+      addLegalSection, updateLegalSection, deleteLegalSection
     }}>
       {children}
     </DataContext.Provider>
