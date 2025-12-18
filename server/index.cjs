@@ -28,7 +28,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // CORS Configuration - restrict to allowed origins
-const allowedOrigins = process.env.ALLOWED_ORIGINS 
+const allowedOrigins = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
     : ['http://localhost:5173', 'http://localhost:3001'];
 
@@ -92,7 +92,7 @@ const authenticate = (req, res, next) => {
     const authHeader = req.headers.authorization;
     let authFailed = false;
     let errorReason = 'Unauthorized'; // Generic error for all cases
-    
+
     if (authHeader) {
         const token = authHeader.split(' ')[1];
         if (token) {
@@ -115,15 +115,15 @@ const authenticate = (req, res, next) => {
     } else {
         authFailed = true;
     }
-    
+
     // Consistent response for all authentication failures
     return res.status(401).json({ error: errorReason });
 };
 
 // Whitelist of allowed tables for CRUD operations
 const ALLOWED_TABLES = [
-    'blog_posts', 'jobs', 'projects', 'pages', 'messages', 
-    'menu_items', 'home_features', 'home_services', 
+    'blog_posts', 'jobs', 'projects', 'pages', 'messages',
+    'menu_items', 'home_features', 'home_services',
     'infrastructure_features', 'tech_partners', 'testimonials',
     'career_values', 'career_tech_stack', 'legal_sections'
 ];
@@ -182,29 +182,29 @@ const createCrud = (table, fields, excludeMethods = []) => {
         router.post('/', isPublic ? (req, res, next) => next() : authenticate, async (req, res) => {
             try {
                 const data = req.body;
-                
+
                 // Input validation for contact form
                 if (table === 'messages') {
                     const { name, surname, email, phone, message } = data;
-                    
+
                     // Email validation using validator library
                     if (email && !validator.isEmail(email)) {
                         return res.status(400).json({ error: "Invalid email format" });
                     }
-                    
+
                     // Sanitize inputs to prevent XSS
                     if (name && name.length > 100) return res.status(400).json({ error: "Name too long" });
                     if (surname && surname.length > 100) return res.status(400).json({ error: "Surname too long" });
                     if (phone && phone.length > 50) return res.status(400).json({ error: "Phone too long" });
                     if (message && message.length > 5000) return res.status(400).json({ error: "Message too long" });
-                    
+
                     // Sanitize HTML content
                     data.name = name ? xss(name) : '';
                     data.surname = surname ? xss(surname) : '';
                     data.phone = phone ? xss(phone) : '';
                     data.message = message ? xss(message) : '';
                 }
-                
+
                 const placeholders = fields.map(() => '?').join(',');
                 const values = fields.map(f => data[f]);
 
@@ -246,9 +246,9 @@ const createCrud = (table, fields, excludeMethods = []) => {
                                 host: process.env.SMTP_HOST || "smtp.ethereal.email",
                                 port: parseInt(process.env.SMTP_PORT, 10) || 587,
                                 secure: process.env.SMTP_SECURE === 'true',
-                                auth: { 
-                                    user: process.env.SMTP_USER || "test@ethereal.email", 
-                                    pass: process.env.SMTP_PASS || "test-password" 
+                                auth: {
+                                    user: process.env.SMTP_USER || "test@ethereal.email",
+                                    pass: process.env.SMTP_PASS || "test-password"
                                 },
                             });
                         }
@@ -350,27 +350,27 @@ const createCrud = (table, fields, excludeMethods = []) => {
 // Login Endpoint - JWT based authentication with rate limiting
 app.post('/api/auth/login', authLimiter, async (req, res) => {
     const { password } = req.body;
-    
+
     // Validate password is provided
     if (!password) {
         return res.status(400).json({ success: false, message: 'Password required' });
     }
-    
+
     try {
         // Get hashed password from environment
         const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
         const jwtSecret = process.env.JWT_SECRET;
-        
+
         if (!adminPasswordHash || !jwtSecret) {
             console.error('Server configuration error: missing required environment variables');
             return res.status(500).json({ success: false, message: 'Server configuration error' });
         }
-        
+
         const isValid = await bcrypt.compare(password, adminPasswordHash);
-        
+
         if (isValid) {
             const token = jwt.sign(
-                { role: 'admin' }, 
+                { role: 'admin' },
                 jwtSecret,
                 { expiresIn: '24h' }
             );
@@ -415,11 +415,11 @@ const SENSITIVE_KEYS = ['smtp_pass', 'smtp_user', 'gemini_api', 'api_key', 'secr
 settingsRouter.get('/', async (req, res) => {
     try {
         const rows = await req.db.all(`SELECT * FROM site_settings`);
-        
+
         // Check if request is authenticated
         const authHeader = req.headers.authorization;
         let isAuthenticated = false;
-        
+
         if (authHeader) {
             const token = authHeader.split(' ')[1];
             try {
@@ -432,21 +432,21 @@ settingsRouter.get('/', async (req, res) => {
                 // Not authenticated
             }
         }
-        
+
         // Filter out sensitive keys for non-authenticated users
-        const filteredRows = isAuthenticated 
-            ? rows 
+        const filteredRows = isAuthenticated
+            ? rows
             : rows.filter(row => {
                 // Check if the key contains any sensitive keyword (case-insensitive)
                 const keyLower = row.ckey.toLowerCase();
                 return !SENSITIVE_KEYS.some(sensitive => {
                     const sensitiveLower = String(sensitive).toLowerCase();
-                    return keyLower === sensitiveLower || 
-                           keyLower.endsWith('_' + sensitiveLower) ||
-                           keyLower.startsWith(sensitiveLower + '_');
+                    return keyLower === sensitiveLower ||
+                        keyLower.endsWith('_' + sensitiveLower) ||
+                        keyLower.startsWith(sensitiveLower + '_');
                 });
             });
-        
+
         res.json(filteredRows);
     } catch (err) {
         console.error('Error fetching settings:', err);
@@ -533,7 +533,7 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
-const upload = multer({ 
+const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
     limits: {
@@ -543,29 +543,29 @@ const upload = multer({
 
 app.post('/api/upload', uploadLimiter, authenticate, upload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-    
+
     try {
         // Validate file content using magic bytes
         const fs = require('fs');
         const fileBuffer = fs.readFileSync(req.file.path);
         const fileTypeResult = await fileTypeFromBuffer(fileBuffer);
-        
+
         if (!fileTypeResult) {
             // Unknown file type - remove the file
             fs.unlinkSync(req.file.path);
             return res.status(400).json({ error: 'Unknown file type' });
         }
-        
+
         // Verify the detected MIME type matches our allowed types
         if (!ALLOWED_FILE_TYPES.includes(fileTypeResult.mime)) {
             // File type mismatch - remove the file
             fs.unlinkSync(req.file.path);
-            return res.status(400).json({ 
+            return res.status(400).json({
                 error: 'Invalid file type. Only images and PDFs are allowed.',
                 detected: fileTypeResult.mime
             });
         }
-        
+
         // Additional check: ensure MIME type matches the file extension
         const expectedMimes = {
             '.jpg': ['image/jpeg'],
@@ -575,20 +575,20 @@ app.post('/api/upload', uploadLimiter, authenticate, upload.single('file'), asyn
             '.webp': ['image/webp'],
             '.pdf': ['application/pdf']
         };
-        
+
         const ext = path.extname(req.file.originalname).toLowerCase();
         const expectedMimeTypes = expectedMimes[ext];
-        
+
         if (expectedMimeTypes && !expectedMimeTypes.includes(fileTypeResult.mime)) {
             // Extension/MIME mismatch - remove the file
             fs.unlinkSync(req.file.path);
-            return res.status(400).json({ 
+            return res.status(400).json({
                 error: 'File extension does not match file content',
                 extension: ext,
                 detected: fileTypeResult.mime
             });
         }
-        
+
         const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
         res.json({ url: fileUrl });
     } catch (error) {
@@ -661,6 +661,19 @@ app.get('/robots.txt', async (req, res) => {
         res.status(500).send("Error");
     }
 });
+
+// --- Serve Frontend (Production) ---
+const distPath = path.join(__dirname, '../dist');
+if (fs.existsSync(distPath)) {
+    app.use(express.static(distPath));
+    // SPA Catch-all
+    app.get('*', (req, res) => {
+        if (req.originalUrl.startsWith('/api')) return res.status(404).json({ error: 'Not found' });
+        res.sendFile(path.join(distPath, 'index.html'));
+    });
+} else {
+    console.log("Dist folder not found, running might be in dev mode or not built yet.");
+}
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
