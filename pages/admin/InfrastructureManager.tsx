@@ -21,13 +21,15 @@ const InfrastructureManager: React.FC = () => {
         if (!featTitle) return;
 
         if (editingFeatId) {
+            const existingFeature = infraFeatures.find((feat: any) => feat.id === editingFeatId);
+
             await updateInfraFeature({
                 id: editingFeatId,
                 title: featTitle,
                 description: featDesc,
                 icon: featIcon,
                 points: featPoints,
-                order_index: 0 // Keep existing or fix generic update to ignore unset
+                order_index: existingFeature ? existingFeature.order_index : infraFeatures.length + 1
             } as any);
             setEditingFeatId(null);
         } else {
@@ -67,11 +69,13 @@ const InfrastructureManager: React.FC = () => {
         if (!partnerName) return;
 
         if (editingPartnerId) {
+            const existingPartner = techPartners.find((partner: any) => partner.id === editingPartnerId);
+
             await updateTechPartner({
                 id: editingPartnerId,
                 name: partnerName,
                 icon: partnerIcon,
-                order_index: 0
+                order_index: existingPartner ? existingPartner.order_index : techPartners.length + 1
             } as any);
             setEditingPartnerId(null);
         } else {

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useData } from '../../context/DataContext';
+import ConfirmModal from '../../components/ConfirmModal';
 
 const SiteSettingsManager: React.FC = () => {
     const { siteSettings, updateSetting, deleteSetting } = useData() as any;
@@ -7,6 +8,8 @@ const SiteSettingsManager: React.FC = () => {
     const [formData, setFormData] = useState<any>({});
     const [isAdding, setIsAdding] = useState(false);
     const [newSetting, setNewSetting] = useState<any>({ ckey: '', value: '', group_name: 'Genel', type: 'text' });
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleteCkey, setDeleteCkey] = useState<string | null>(null);
 
     const handleEdit = (setting: any) => {
         setEditingId(setting.id || setting.ckey);
@@ -14,15 +17,27 @@ const SiteSettingsManager: React.FC = () => {
     };
 
     const handleDelete = async (ckey: string) => {
-        if (window.confirm(`${ckey} ayarını silmek istediğinize emin misiniz?`)) {
+        setDeleteCkey(ckey);
+        setShowDeleteModal(true);
+    };
+
+    const confirmDelete = async () => {
+        if (deleteCkey) {
             try {
-                await deleteSetting(ckey);
+                await deleteSetting(deleteCkey);
                 alert('Ayar silindi.');
             } catch (error: any) {
                 console.error(error);
                 alert('Silme başarısız: ' + error.message);
             }
+            setShowDeleteModal(false);
+            setDeleteCkey(null);
         }
+    };
+
+    const cancelDelete = () => {
+        setShowDeleteModal(false);
+        setDeleteCkey(null);
     };
 
     const handleSave = async () => {
@@ -222,6 +237,18 @@ const SiteSettingsManager: React.FC = () => {
                     <strong>Bilgi:</strong> 'site_url' ayarı robots.txt ve sitemap.xml oluşumunu etkiler. Lütfen tam URL giriniz (örn: https://www.ionetteknoloji.com.tr).
                 </p>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            <ConfirmModal
+                isOpen={showDeleteModal}
+                title="Ayarı Sil"
+                message={`"${deleteCkey}" ayarını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`}
+                confirmText="Sil"
+                cancelText="İptal"
+                onConfirm={confirmDelete}
+                onCancel={cancelDelete}
+                variant="danger"
+            />
         </div>
     );
 };

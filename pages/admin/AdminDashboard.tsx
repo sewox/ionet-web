@@ -29,28 +29,13 @@ const InputField = ({ name, placeholder, value, onChange, type = "text", error }
   </div>
 );
 
-const TextAreaField = ({ name, placeholder, value, onChange, height = "h-auto", error }: any) => (
-  <div className="mb-3">
-    <textarea
-      className={`w-full p-3 border rounded transition-colors outline-none focus:ring-2 ${height} ${error
-        ? 'border-red-500 focus:ring-red-200'
-        : 'border-gray-300 focus:border-primary focus:ring-blue-100'
-        }`}
-      placeholder={placeholder}
-      value={value || ''}
-      onChange={onChange}
-    />
-    {error && <p className="text-red-500 text-xs mt-1 font-medium">{error}</p>}
-  </div>
-);
-
 const AdminDashboard: React.FC = () => {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const {
     blogPosts, addBlogPost, updateBlogPost, deleteBlogPost,
-    jobs, addJob, updateJob, deleteJob,
-    projects, addProject, updateProject, deleteProject,
+    jobs, addJob, updateJob,
+    addProject, updateProject,
     pages, addPage, updatePage, deletePage
   } = useData();
 

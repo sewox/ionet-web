@@ -66,13 +66,19 @@ const ReferencesManager: React.FC = () => {
         if (!testName) return;
 
         if (editingTestId) {
+            const existingTestimonial = testimonials.find(
+                (testimonial: any) => testimonial.id === editingTestId
+            );
+
             await updateTestimonial({
                 id: editingTestId,
                 name: testName,
                 title: testTitle,
                 quote: testQuote,
                 image: testImg,
-                order_index: 0
+                order_index: existingTestimonial
+                    ? existingTestimonial.order_index
+                    : testimonials.length + 1
             } as any);
             setEditingTestId(null);
         } else {

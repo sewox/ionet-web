@@ -149,7 +149,7 @@ const SETTING_DEFINITIONS = [
     { group: 'mail', key: 'smtp_host', label: 'SMTP Sunucu (Host)', type: 'text' },
     { group: 'mail', key: 'smtp_port', label: 'SMTP Port', type: 'text' },
     { group: 'mail', key: 'smtp_user', label: 'SMTP Kullanıcı Adı', type: 'text' },
-    { group: 'mail', key: 'smtp_pass', label: 'SMTP Şifre', type: 'text' }, // TODO: Mask this input in UI ideally
+    { group: 'mail', key: 'smtp_pass', label: 'SMTP Şifre', type: 'password' },
     { group: 'mail', key: 'smtp_secure', label: 'SMTP Güvenli (true/false)', type: 'text' },
     { group: 'mail', key: 'mail_to', label: 'Alıcı E-posta Adresi', type: 'text' },
 
@@ -186,8 +186,15 @@ const ContentManager: React.FC = () => {
 
         setSaving(key);
         try {
+            const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+            const headers: Record<string, string> = {};
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            
             const res = await fetch('/api/upload', {
                 method: 'POST',
+                headers,
                 body: formData
             });
             const data = await res.json();

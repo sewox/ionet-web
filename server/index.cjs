@@ -1,18 +1,80 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
-const fs = require('fs');
 const cors = require('cors');
 const getDb = require('./db.cjs');
 const multer = require('multer');
 const path = require('path');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { v4: uuidv4 } = require('uuid');
+const validator = require('validator');
+const xss = require('xss');
+const rateLimit = require('express-rate-limit');
+const { fileTypeFromBuffer } = require('file-type');
+require('dotenv').config();
+
+// Validate required environment variables on startup
+const requiredEnvVars = ['JWT_SECRET', 'ADMIN_PASSWORD_HASH'];
+for (const envVar of requiredEnvVars) {
+    if (!process.env[envVar]) {
+        console.error(`ERROR: Required environment variable ${envVar} is not set.`);
+        console.error('Please check server/README.md for setup instructions.');
+        process.exit(1);
+    }
+}
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
-app.use(cors());
+// CORS Configuration - restrict to allowed origins
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+    ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+    : ['http://localhost:5173', 'http://localhost:3001'];
+
+app.use(cors({
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
+    credentials: true
+}));
+
 app.use(bodyParser.json({ limit: '50mb' }));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, process.env.UPLOAD_DIR || 'uploads')));
+
+// Rate limiting
+const generalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // Limit each IP to 5 login attempts per windowMs
+    message: 'Too many login attempts, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const uploadLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 20, // Limit file uploads
+    message: 'Too many upload requests, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Apply general rate limiter to all routes
+app.use(generalLimiter);
 
 // Middleware to attach DB to request
 app.use(async (req, res, next) => {
@@ -25,22 +87,68 @@ app.use(async (req, res, next) => {
     }
 });
 
-// Middleware for Auth (Global)
+// Middleware for Auth - JWT based
 const authenticate = (req, res, next) => {
     const authHeader = req.headers.authorization;
+    let authFailed = false;
+    let errorReason = 'Unauthorized'; // Generic error for all cases
+    
     if (authHeader) {
         const token = authHeader.split(' ')[1];
-        // Simple mock token check for now. In production use JWT or DB session.
-        if (token === 'ionet-secret-token-123') {
-            return next();
+        if (token) {
+            try {
+                const jwtSecret = process.env.JWT_SECRET;
+                if (!jwtSecret) {
+                    throw new Error('JWT_SECRET not configured');
+                }
+                const decoded = jwt.verify(token, jwtSecret);
+                req.user = decoded;
+                return next();
+            } catch (err) {
+                // Log internally but don't expose error details to client
+                console.error("JWT verification failed");
+                authFailed = true;
+            }
+        } else {
+            authFailed = true;
         }
+    } else {
+        authFailed = true;
     }
-    return res.status(401).json({ error: 'Unauthorized' });
+    
+    // Consistent response for all authentication failures
+    return res.status(401).json({ error: errorReason });
+};
+
+// Whitelist of allowed tables for CRUD operations
+const ALLOWED_TABLES = [
+    'blog_posts', 'jobs', 'projects', 'pages', 'messages', 
+    'menu_items', 'home_features', 'home_services', 
+    'infrastructure_features', 'tech_partners', 'testimonials',
+    'career_values', 'career_tech_stack', 'legal_sections'
+];
+
+// Validate table name
+const validateTable = (table) => {
+    if (!ALLOWED_TABLES.includes(table)) {
+        throw new Error('Invalid table name');
+    }
+};
+
+// Validate field names (alphanumeric and underscores only)
+const validateFieldName = (field) => {
+    if (!/^[a-zA-Z0-9_]+$/.test(field)) {
+        throw new Error('Invalid field name');
+    }
 };
 
 // --- Generic CRUD Helper ---
 const createCrud = (table, fields, excludeMethods = []) => {
     const router = express.Router();
+
+    // Validate table and fields at router creation
+    validateTable(table);
+    fields.forEach(validateFieldName);
 
     // GET All
     router.get('/', async (req, res) => {
@@ -48,7 +156,8 @@ const createCrud = (table, fields, excludeMethods = []) => {
             const rows = await req.db.all(`SELECT * FROM ${table}`);
             res.json(rows);
         } catch (err) {
-            res.status(500).json({ error: err.message });
+            console.error(`Error fetching from ${table}:`, err);
+            res.status(500).json({ error: "Failed to fetch data" });
         }
     });
 
@@ -60,7 +169,8 @@ const createCrud = (table, fields, excludeMethods = []) => {
             if (!row) return res.status(404).json({ error: "Not found" });
             res.json(row);
         } catch (err) {
-            res.status(500).json({ error: err.message });
+            console.error(`Error fetching from ${table}:`, err);
+            res.status(500).json({ error: "Failed to fetch data" });
         }
     });
 
@@ -72,11 +182,34 @@ const createCrud = (table, fields, excludeMethods = []) => {
         router.post('/', isPublic ? (req, res, next) => next() : authenticate, async (req, res) => {
             try {
                 const data = req.body;
+                
+                // Input validation for contact form
+                if (table === 'messages') {
+                    const { name, surname, email, phone, message } = data;
+                    
+                    // Email validation using validator library
+                    if (email && !validator.isEmail(email)) {
+                        return res.status(400).json({ error: "Invalid email format" });
+                    }
+                    
+                    // Sanitize inputs to prevent XSS
+                    if (name && name.length > 100) return res.status(400).json({ error: "Name too long" });
+                    if (surname && surname.length > 100) return res.status(400).json({ error: "Surname too long" });
+                    if (phone && phone.length > 50) return res.status(400).json({ error: "Phone too long" });
+                    if (message && message.length > 5000) return res.status(400).json({ error: "Message too long" });
+                    
+                    // Sanitize HTML content
+                    data.name = name ? xss(name) : '';
+                    data.surname = surname ? xss(surname) : '';
+                    data.phone = phone ? xss(phone) : '';
+                    data.message = message ? xss(message) : '';
+                }
+                
                 const placeholders = fields.map(() => '?').join(',');
                 const values = fields.map(f => data[f]);
 
                 if (!data.id) {
-                    data.id = Date.now().toString();
+                    data.id = uuidv4();
                     values[0] = data.id;
                 }
 
@@ -98,7 +231,7 @@ const createCrud = (table, fields, excludeMethods = []) => {
                         const host = settings.smtp_host;
                         const user = settings.smtp_user;
                         const pass = settings.smtp_pass;
-                        const to = settings.mail_to || 'admin@ionet.com.tr';
+                        const to = settings.mail_to || process.env.MAIL_TO || 'admin@ionet.com.tr';
                         let transporter;
 
                         if (host && user && pass) {
@@ -108,11 +241,15 @@ const createCrud = (table, fields, excludeMethods = []) => {
                                 host, port, secure, auth: { user, pass },
                             });
                         } else {
+                            // Use environment variables for fallback SMTP
                             transporter = nodemailer.createTransport({
-                                host: "smtp.ethereal.email",
-                                port: 587,
-                                secure: false,
-                                auth: { user: "maddison53@ethereal.email", pass: "jn7jnAPss4f63QBp6D" },
+                                host: process.env.SMTP_HOST || "smtp.ethereal.email",
+                                port: parseInt(process.env.SMTP_PORT, 10) || 587,
+                                secure: process.env.SMTP_SECURE === 'true',
+                                auth: { 
+                                    user: process.env.SMTP_USER || "test@ethereal.email", 
+                                    pass: process.env.SMTP_PASS || "test-password" 
+                                },
                             });
                         }
 
@@ -136,7 +273,7 @@ const createCrud = (table, fields, excludeMethods = []) => {
                         };
 
                         await transporter.sendMail({
-                            from: `"I/ONET Website" <${user || 'contact@ionet.com.tr'}>`,
+                            from: `"I/ONET Website" <${user || process.env.MAIL_FROM || 'contact@ionet.com.tr'}>`,
                             to: to,
                             subject: replacer(subject),
                             html: replacer(html),
@@ -159,7 +296,8 @@ const createCrud = (table, fields, excludeMethods = []) => {
                 res.json(data);
 
             } catch (err) {
-                res.status(500).json({ error: err.message });
+                console.error(`Error creating in ${table}:`, err);
+                res.status(500).json({ error: "Failed to create data" });
             }
         });
     }
@@ -186,7 +324,8 @@ const createCrud = (table, fields, excludeMethods = []) => {
                 );
                 res.json({ success: true, id, ...data });
             } catch (err) {
-                res.status(500).json({ error: err.message });
+                console.error(`Error updating in ${table}:`, err);
+                res.status(500).json({ error: "Failed to update data" });
             }
         });
     }
@@ -199,7 +338,8 @@ const createCrud = (table, fields, excludeMethods = []) => {
                 await req.db.run(`DELETE FROM ${table} WHERE id = ?`, id);
                 res.json({ message: 'Deleted' });
             } catch (err) {
-                res.status(500).json({ error: err.message });
+                console.error(`Error deleting from ${table}:`, err);
+                res.status(500).json({ error: "Failed to delete data" });
             }
         });
     }
@@ -207,13 +347,40 @@ const createCrud = (table, fields, excludeMethods = []) => {
     return router;
 };
 
-// Login Endpoint
-app.post('/api/auth/login', (req, res) => {
+// Login Endpoint - JWT based authentication with rate limiting
+app.post('/api/auth/login', authLimiter, async (req, res) => {
     const { password } = req.body;
-    if (password === 'admin123') {
-        res.json({ success: true, token: 'ionet-secret-token-123' });
-    } else {
-        res.status(401).json({ success: false, message: 'Invalid credentials' });
+    
+    // Validate password is provided
+    if (!password) {
+        return res.status(400).json({ success: false, message: 'Password required' });
+    }
+    
+    try {
+        // Get hashed password from environment
+        const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
+        const jwtSecret = process.env.JWT_SECRET;
+        
+        if (!adminPasswordHash || !jwtSecret) {
+            console.error('Server configuration error: missing required environment variables');
+            return res.status(500).json({ success: false, message: 'Server configuration error' });
+        }
+        
+        const isValid = await bcrypt.compare(password, adminPasswordHash);
+        
+        if (isValid) {
+            const token = jwt.sign(
+                { role: 'admin' }, 
+                jwtSecret,
+                { expiresIn: '24h' }
+            );
+            res.json({ success: true, token });
+        } else {
+            res.status(401).json({ success: false, message: 'Invalid credentials' });
+        }
+    } catch (err) {
+        console.error('Login error:', err);
+        res.status(500).json({ success: false, message: 'Authentication failed' });
     }
 });
 
@@ -231,7 +398,8 @@ pagesRouter.get('/slug/:slug', async (req, res) => {
         if (!row) return res.status(404).json({ error: "Page not found" });
         res.json(row);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('Error fetching page by slug:', err);
+        res.status(500).json({ error: "Failed to fetch page" });
     }
 });
 app.use('/api/pages', pagesRouter);
@@ -241,12 +409,48 @@ app.use('/api/messages', createCrud('messages', ['id', 'name', 'surname', 'email
 // --- Settings Route ---
 const settingsRouter = express.Router();
 
+// Sensitive keys that should never be exposed to non-authenticated users
+const SENSITIVE_KEYS = ['smtp_pass', 'smtp_user', 'gemini_api', 'api_key', 'secret', 'password', 'token'];
+
 settingsRouter.get('/', async (req, res) => {
     try {
         const rows = await req.db.all(`SELECT * FROM site_settings`);
-        res.json(rows);
+        
+        // Check if request is authenticated
+        const authHeader = req.headers.authorization;
+        let isAuthenticated = false;
+        
+        if (authHeader) {
+            const token = authHeader.split(' ')[1];
+            try {
+                const jwtSecret = process.env.JWT_SECRET;
+                if (jwtSecret) {
+                    jwt.verify(token, jwtSecret);
+                    isAuthenticated = true;
+                }
+            } catch (err) {
+                // Not authenticated
+            }
+        }
+        
+        // Filter out sensitive keys for non-authenticated users
+        const filteredRows = isAuthenticated 
+            ? rows 
+            : rows.filter(row => {
+                // Check if the key contains any sensitive keyword (case-insensitive)
+                const keyLower = row.ckey.toLowerCase();
+                return !SENSITIVE_KEYS.some(sensitive => {
+                    const sensitiveLower = String(sensitive).toLowerCase();
+                    return keyLower === sensitiveLower || 
+                           keyLower.endsWith('_' + sensitiveLower) ||
+                           keyLower.startsWith(sensitiveLower + '_');
+                });
+            });
+        
+        res.json(filteredRows);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('Error fetching settings:', err);
+        res.status(500).json({ error: "Failed to fetch settings" });
     }
 });
 
@@ -261,7 +465,7 @@ settingsRouter.post('/', authenticate, async (req, res) => {
                 value, group_name, type, ckey
             );
         } else {
-            const id = Date.now().toString() + Math.random().toString(36).substring(2, 7);
+            const id = uuidv4();
             await req.db.run(
                 `INSERT INTO site_settings (id, ckey, value, group_name, type) VALUES (?, ?, ?, ?, ?)`,
                 id, ckey, value, group_name, type
@@ -269,7 +473,8 @@ settingsRouter.post('/', authenticate, async (req, res) => {
         }
         res.json({ success: true, ckey, value });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('Error saving setting:', err);
+        res.status(500).json({ error: "Failed to save setting" });
     }
 });
 
@@ -279,7 +484,8 @@ settingsRouter.delete('/:ckey', authenticate, async (req, res) => {
         const result = await req.db.run("DELETE FROM site_settings WHERE ckey = ?", ckey);
         res.json({ success: true, message: 'Deleted', changes: result.changes });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('Error deleting setting:', err);
+        res.status(500).json({ error: "Failed to delete setting" });
     }
 });
 app.use('/api/settings', settingsRouter);
@@ -295,21 +501,109 @@ app.use('/api/career_tech_stack', createCrud('career_tech_stack', ['id', 'name',
 app.use('/api/legal_sections', createCrud('legal_sections', ['id', 'title', 'content', 'anchor', 'order_index']));
 
 // --- File Upload ---
+const fs = require('fs');
+const uploadDir = process.env.UPLOAD_DIR || 'server/uploads/';
+
+// Ensure upload directory exists
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Allowed file types for upload (SVG removed due to XSS risk)
+const ALLOWED_FILE_TYPES = [
+    'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+    'application/pdf'
+];
+
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'server/uploads/');
+        cb(null, uploadDir);
     },
     filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const uniqueSuffix = uuidv4();
         cb(null, uniqueSuffix + path.extname(file.originalname));
     }
 });
-const upload = multer({ storage: storage });
 
-app.post('/api/upload', authenticate, upload.single('file'), (req, res) => {
+const fileFilter = (req, file, cb) => {
+    if (ALLOWED_FILE_TYPES.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error('Invalid file type. Only images and PDFs are allowed.'), false);
+    }
+};
+
+const upload = multer({ 
+    storage: storage,
+    fileFilter: fileFilter,
+    limits: {
+        fileSize: parseInt(process.env.MAX_FILE_SIZE, 10) || 52428800 // 50MB default
+    }
+});
+
+app.post('/api/upload', uploadLimiter, authenticate, upload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
-    res.json({ url: fileUrl });
+    
+    try {
+        // Validate file content using magic bytes
+        const fs = require('fs');
+        const fileBuffer = fs.readFileSync(req.file.path);
+        const fileTypeResult = await fileTypeFromBuffer(fileBuffer);
+        
+        if (!fileTypeResult) {
+            // Unknown file type - remove the file
+            fs.unlinkSync(req.file.path);
+            return res.status(400).json({ error: 'Unknown file type' });
+        }
+        
+        // Verify the detected MIME type matches our allowed types
+        if (!ALLOWED_FILE_TYPES.includes(fileTypeResult.mime)) {
+            // File type mismatch - remove the file
+            fs.unlinkSync(req.file.path);
+            return res.status(400).json({ 
+                error: 'Invalid file type. Only images and PDFs are allowed.',
+                detected: fileTypeResult.mime
+            });
+        }
+        
+        // Additional check: ensure MIME type matches the file extension
+        const expectedMimes = {
+            '.jpg': ['image/jpeg'],
+            '.jpeg': ['image/jpeg'],
+            '.png': ['image/png'],
+            '.gif': ['image/gif'],
+            '.webp': ['image/webp'],
+            '.pdf': ['application/pdf']
+        };
+        
+        const ext = path.extname(req.file.originalname).toLowerCase();
+        const expectedMimeTypes = expectedMimes[ext];
+        
+        if (expectedMimeTypes && !expectedMimeTypes.includes(fileTypeResult.mime)) {
+            // Extension/MIME mismatch - remove the file
+            fs.unlinkSync(req.file.path);
+            return res.status(400).json({ 
+                error: 'File extension does not match file content',
+                extension: ext,
+                detected: fileTypeResult.mime
+            });
+        }
+        
+        const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+        res.json({ url: fileUrl });
+    } catch (error) {
+        // Clean up file on error
+        if (req.file && req.file.path) {
+            try {
+                const fs = require('fs');
+                fs.unlinkSync(req.file.path);
+            } catch (cleanupError) {
+                console.error('Error cleaning up file:', cleanupError);
+            }
+        }
+        console.error('File upload error:', error);
+        res.status(500).json({ error: 'File upload failed' });
+    }
 });
 
 // --- SEO Routes ---
