@@ -2,22 +2,38 @@ import React, { useState } from 'react';
 import { useData } from '../../context/DataContext';
 
 const ServicesManager: React.FC = () => {
-    const { homeServices, addService, deleteService } = useData();
+    const { homeServices, addService, updateService, deleteService } = useData();
     const [newItem, setNewItem] = useState({ title: '', description: '', icon: 'dns', link: '/infrastructure', order_index: 0 });
+    const [editingId, setEditingId] = useState<string | null>(null);
 
     const handleAdd = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newItem.title || !newItem.description) return;
 
-        await addService({
-            id: Date.now().toString(),
-            title: newItem.title,
-            description: newItem.description,
-            icon: newItem.icon,
-            link: newItem.link,
-            order_index: homeServices.length + 1
-        });
+        if (editingId) {
+            await updateService({ ...newItem, id: editingId, order_index: newItem.order_index || 0 } as any);
+            setEditingId(null);
+        } else {
+            await addService({
+                id: Date.now().toString(),
+                title: newItem.title,
+                description: newItem.description,
+                icon: newItem.icon,
+                link: newItem.link,
+                order_index: homeServices.length + 1
+            });
+        }
         setNewItem({ title: '', description: '', icon: 'dns', link: '/infrastructure', order_index: 0 });
+    };
+
+    const handleEdit = (item: any) => {
+        setNewItem({ title: item.title, description: item.description, icon: item.icon, link: item.link, order_index: item.order_index });
+        setEditingId(item.id);
+    };
+
+    const handleCancel = () => {
+        setNewItem({ title: '', description: '', icon: 'dns', link: '/infrastructure', order_index: 0 });
+        setEditingId(null);
     };
 
     return (
@@ -49,12 +65,20 @@ const ServicesManager: React.FC = () => {
                                             </span>
                                         </div>
                                     </div>
-                                    <button
-                                        onClick={() => deleteService(item.id)}
-                                        className="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition-colors p-1"
-                                    >
-                                        <span className="material-symbols-outlined text-lg">delete</span>
-                                    </button>
+                                    <div className="absolute top-2 right-2 flex gap-1">
+                                        <button
+                                            onClick={() => handleEdit(item)}
+                                            className="text-gray-400 hover:text-blue-500 transition-colors p-1"
+                                        >
+                                            <span className="material-symbols-outlined text-lg">edit</span>
+                                        </button>
+                                        <button
+                                            onClick={() => deleteService(item.id)}
+                                            className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                                        >
+                                            <span className="material-symbols-outlined text-lg">delete</span>
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -63,7 +87,7 @@ const ServicesManager: React.FC = () => {
 
                 {/* Ekleme Formu */}
                 <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 h-fit">
-                    <h4 className="font-semibold text-gray-800 mb-4">Yeni Hizmet Ekle</h4>
+                    <h4 className="font-semibold text-gray-800 mb-4">{editingId ? 'Hizmeti Düzenle' : 'Yeni Hizmet Ekle'}</h4>
                     <form onSubmit={handleAdd} className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Başlık</label>
@@ -110,12 +134,23 @@ const ServicesManager: React.FC = () => {
                                 className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors text-sm"
                             />
                         </div>
-                        <button
-                            type="submit"
-                            className="w-full bg-primary text-white font-bold py-2 rounded-lg hover:bg-primary-dark transition-colors shadow-lg shadow-primary/25"
-                        >
-                            Ekle
-                        </button>
+                        <div className="flex gap-2">
+                            {editingId && (
+                                <button
+                                    type="button"
+                                    onClick={handleCancel}
+                                    className="w-full bg-gray-200 text-gray-700 font-bold py-2 rounded-lg hover:bg-gray-300 transition-colors"
+                                >
+                                    İptal
+                                </button>
+                            )}
+                            <button
+                                type="submit"
+                                className="w-full bg-primary text-white font-bold py-2 rounded-lg hover:bg-primary-dark transition-colors shadow-lg shadow-primary/25"
+                            >
+                                {editingId ? 'Güncelle' : 'Ekle'}
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>

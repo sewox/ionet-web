@@ -9,7 +9,9 @@ export default defineConfig(({ mode }) => {
       port: 3000,
       host: '0.0.0.0',
       proxy: {
-        '/api': 'http://localhost:3001'
+        '/api': 'http://localhost:3001',
+        '/sitemap.xml': 'http://localhost:3001',
+        '/robots.txt': 'http://localhost:3001'
       }
     },
     plugins: [react()],

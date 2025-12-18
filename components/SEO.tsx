@@ -8,9 +8,12 @@ interface SEOProps {
     keywords?: string;
     image?: string;
     url?: string;
+    canonical?: string;
+    jsonLd?: any;
+    robots?: string;
 }
 
-const SEO: React.FC<SEOProps> = ({ title, description, keywords, image, url }) => {
+const SEO: React.FC<SEOProps> = ({ title, description, keywords, image, url, canonical, jsonLd, robots }) => {
     const { siteSettings } = useData();
 
     const getContent = (key: string, defaultValue: string = '') => {
@@ -28,9 +31,12 @@ const SEO: React.FC<SEOProps> = ({ title, description, keywords, image, url }) =
             <title>{fullTitle}</title>
             <meta name="description" content={description || defaultDescription} />
             <meta name="keywords" content={keywords || defaultKeywords} />
+            {robots && <meta name="robots" content={robots} />}
+            {canonical && <link rel="canonical" href={canonical} />}
 
             {/* OG Tags */}
             <meta property="og:title" content={fullTitle} />
+            <meta property="og:site_name" content={siteTitle} />
             <meta property="og:description" content={description || defaultDescription} />
             <meta property="og:type" content="website" />
             {url && <meta property="og:url" content={url} />}
@@ -41,6 +47,13 @@ const SEO: React.FC<SEOProps> = ({ title, description, keywords, image, url }) =
             <meta name="twitter:title" content={fullTitle} />
             <meta name="twitter:description" content={description || defaultDescription} />
             {(image || defaultImage) && <meta name="twitter:image" content={image || defaultImage} />}
+
+            {/* Structured Data */}
+            {jsonLd && (
+                <script type="application/ld+json">
+                    {JSON.stringify(jsonLd)}
+                </script>
+            )}
         </Helmet>
     );
 };

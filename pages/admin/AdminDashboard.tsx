@@ -10,6 +10,7 @@ import InfrastructureManager from './InfrastructureManager';
 import ReferencesManager from './ReferencesManager';
 import CareersManager from './CareersManager';
 import LegalManager from './LegalManager';
+import SiteSettingsManager from './SiteSettingsManager';
 import TextEditor from '../../components/TextEditor';
 
 const InputField = ({ name, placeholder, value, onChange, type = "text", error }: any) => (
@@ -47,16 +48,17 @@ const AdminDashboard: React.FC = () => {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const {
-    blogPosts, addBlogPost, deleteBlogPost,
-    jobs, addJob, deleteJob,
-    projects, addProject, deleteProject,
-    pages, addPage, deletePage
+    blogPosts, addBlogPost, updateBlogPost, deleteBlogPost,
+    jobs, addJob, updateJob, deleteJob,
+    projects, addProject, updateProject, deleteProject,
+    pages, addPage, updatePage, deletePage
   } = useData();
 
-  const [activeTab, setActiveTab] = useState<'blog' | 'careers' | 'references' | 'pages' | 'content' | 'menu' | 'features' | 'services' | 'infrastructure'>('blog');
+  const [activeTab, setActiveTab] = useState<'blog' | 'careers' | 'references' | 'pages' | 'content' | 'menu' | 'features' | 'services' | 'infrastructure' | 'legal' | 'settings'>('blog');
 
   // Form States
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<any>({});
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
@@ -99,6 +101,7 @@ const AdminDashboard: React.FC = () => {
 
   const closeModal = () => {
     setIsModalOpen(false);
+    setEditingId(null);
     setFormData({});
     setFormErrors({});
   };
@@ -106,23 +109,39 @@ const AdminDashboard: React.FC = () => {
   const handleCreate = async () => {
     if (!validateForm()) return;
 
-    const id = Date.now().toString();
     try {
-      if (activeTab === 'blog') {
-        await addBlogPost({ ...formData, id, date: new Date().toLocaleDateString('tr-TR') } as BlogPost);
-      } else if (activeTab === 'careers') {
-        await addJob({ ...formData, id } as Job);
-      } else if (activeTab === 'pages') {
-        await addPage({ ...formData, id } as any);
+      if (editingId) {
+        // Update Logic
+        if (activeTab === 'blog') await updateBlogPost({ ...formData, id: editingId } as BlogPost);
+        else if (activeTab === 'careers') await updateJob({ ...formData, id: editingId } as Job);
+        else if (activeTab === 'pages') await updatePage({ ...formData, id: editingId } as any);
+        else await updateProject({ ...formData, id: editingId } as Project);
+        alert('Kayıt güncellendi!');
       } else {
-        await addProject({ ...formData, id } as Project);
+        // Create Logic
+        const id = Date.now().toString();
+        if (activeTab === 'blog') {
+          await addBlogPost({ ...formData, id, date: new Date().toLocaleDateString('tr-TR') } as BlogPost);
+        } else if (activeTab === 'careers') {
+          await addJob({ ...formData, id } as Job);
+        } else if (activeTab === 'pages') {
+          await addPage({ ...formData, id } as any);
+        } else {
+          await addProject({ ...formData, id } as Project);
+        }
+        alert('Kayıt başarıyla eklendi.');
       }
       closeModal();
-      alert('Kayıt başarıyla eklendi.');
     } catch (error: any) {
       console.error(error);
       alert('Hata oluştu: ' + error.message);
     }
+  };
+
+  const handleEdit = (item: any) => {
+    setEditingId(item.id);
+    setFormData({ ...item });
+    setIsModalOpen(true);
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -146,7 +165,6 @@ const AdminDashboard: React.FC = () => {
       return (
         <>
           <InputField name="title" placeholder="Başlık" value={formData.title} onChange={(e: any) => setFormData({ ...formData, title: e.target.value })} error={formErrors.title} />
-          <InputField name="category" placeholder="Kategori" value={formData.category} onChange={(e: any) => setFormData({ ...formData, category: e.target.value })} error={formErrors.category} />
           <InputField name="category" placeholder="Kategori" value={formData.category} onChange={(e: any) => setFormData({ ...formData, category: e.target.value })} error={formErrors.category} />
 
           <div className="mb-3">
@@ -234,7 +252,6 @@ const AdminDashboard: React.FC = () => {
         <>
           <InputField name="title" placeholder="Sayfa Başlığı" value={formData.title} onChange={(e: any) => setFormData({ ...formData, title: e.target.value })} error={formErrors.title} />
           <InputField name="slug" placeholder="URL (Slug) - örn: hakkimizda" value={formData.slug} onChange={(e: any) => setFormData({ ...formData, slug: e.target.value })} error={formErrors.slug} />
-          <InputField name="slug" placeholder="URL (Slug) - örn: hakkimizda" value={formData.slug} onChange={(e: any) => setFormData({ ...formData, slug: e.target.value })} error={formErrors.slug} />
           <div className="mb-3">
             <label className="block text-sm font-medium text-gray-700 mb-1">Sayfa İçeriği</label>
             <TextEditor value={formData.content} onChange={(val) => setFormData({ ...formData, content: val })} height="400px" />
@@ -246,7 +263,6 @@ const AdminDashboard: React.FC = () => {
       return (
         <>
           <InputField name="title" placeholder="Proje Adı" value={formData.title} onChange={(e: any) => setFormData({ ...formData, title: e.target.value })} error={formErrors.title} />
-          <InputField name="category" placeholder="Sektör" value={formData.category} onChange={(e: any) => setFormData({ ...formData, category: e.target.value })} error={formErrors.category} />
           <InputField name="category" placeholder="Sektör" value={formData.category} onChange={(e: any) => setFormData({ ...formData, category: e.target.value })} error={formErrors.category} />
           <div className="mb-3">
             <label className="block text-sm font-medium text-gray-700 mb-1">Proje Açıklaması</label>
@@ -273,76 +289,83 @@ const AdminDashboard: React.FC = () => {
 
       <div className="flex-1 max-w-7xl w-full mx-auto p-6">
         {/* Tabs */}
-        <div className="flex gap-4 border-b border-gray-200 mb-6">
+        <div className="flex gap-4 border-b border-gray-200 mb-6 overflow-x-auto pb-2">
           <button
             onClick={() => setActiveTab('blog')}
-            className={`pb-3 px-2 font-medium transition-all flex items-center gap-2 ${activeTab === 'blog' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`pb-3 px-2 font-medium transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'blog' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
           >
             <span className="material-symbols-outlined text-[20px]">article</span>
             Blog Yazıları
           </button>
           <button
             onClick={() => setActiveTab('careers')}
-            className={`pb-3 px-2 font-medium transition-all flex items-center gap-2 ${activeTab === 'careers' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`pb-3 px-2 font-medium transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'careers' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
           >
             <span className="material-symbols-outlined text-[20px]">work</span>
             Kariyer / İK
           </button>
           <button
             onClick={() => setActiveTab('legal')}
-            className={`pb-3 px-2 font-medium transition-all flex items-center gap-2 ${activeTab === 'legal' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`pb-3 px-2 font-medium transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'legal' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
           >
             <span className="material-symbols-outlined text-[20px]">gavel</span>
             Yasal (Legal)
           </button>
           <button
             onClick={() => setActiveTab('pages')}
-            className={`pb-3 px-2 font-medium transition-all flex items-center gap-2 ${activeTab === 'pages' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`pb-3 px-2 font-medium transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'pages' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
           >
             <span className="material-symbols-outlined text-[20px]">web</span>
             Sayfalar (CMS)
           </button>
           <button
             onClick={() => setActiveTab('content')}
-            className={`pb-3 px-2 font-medium transition-all flex items-center gap-2 ${activeTab === 'content' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`pb-3 px-2 font-medium transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'content' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
           >
             <span className="material-symbols-outlined text-[20px]">edit_document</span>
             Site İçeriği
           </button>
           <button
             onClick={() => setActiveTab('menu')}
-            className={`pb-3 px-2 font-medium transition-all flex items-center gap-2 ${activeTab === 'menu' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`pb-3 px-2 font-medium transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'menu' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
           >
             <span className="material-symbols-outlined text-[20px]">menu_book</span>
             Menü Yönetimi
           </button>
           <button
             onClick={() => setActiveTab('features')}
-            className={`pb-3 px-2 font-medium transition-all flex items-center gap-2 ${activeTab === 'features' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`pb-3 px-2 font-medium transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'features' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
           >
             <span className="material-symbols-outlined text-[20px]">widgets</span>
             Özellikler
           </button>
           <button
             onClick={() => setActiveTab('services')}
-            className={`pb-3 px-2 font-medium transition-all flex items-center gap-2 ${activeTab === 'services' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`pb-3 px-2 font-medium transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'services' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
           >
             <span className="material-symbols-outlined text-[20px]">grid_view</span>
             Hizmetler
           </button>
           <button
             onClick={() => setActiveTab('infrastructure')}
-            className={`pb-3 px-2 font-medium transition-all flex items-center gap-2 ${activeTab === 'infrastructure' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`pb-3 px-2 font-medium transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'infrastructure' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
           >
             <span className="material-symbols-outlined text-[20px]">dns</span>
             Altyapı Yönetimi
           </button>
           <button
             onClick={() => setActiveTab('references')}
-            className={`pb-3 px-2 font-medium transition-all flex items-center gap-2 ${activeTab === 'references' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`pb-3 px-2 font-medium transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'references' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
           >
             <span className="material-symbols-outlined text-[20px]">workspace_premium</span>
             Referanslar
+          </button>
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`pb-3 px-2 font-medium transition-all flex items-center gap-2 whitespace-nowrap ${activeTab === 'settings' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            <span className="material-symbols-outlined text-[20px]">settings</span>
+            Site Ayarları
           </button>
         </div>
 
@@ -363,6 +386,8 @@ const AdminDashboard: React.FC = () => {
           <InfrastructureManager />
         ) : activeTab === 'references' ? (
           <ReferencesManager />
+        ) : activeTab === 'settings' ? (
+          <SiteSettingsManager />
         ) : (
           <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
             <div className="flex justify-between items-center mb-6">
@@ -385,7 +410,11 @@ const AdminDashboard: React.FC = () => {
                       <p className="text-xs text-gray-500">{post.category} • {post.date}</p>
                     </div>
                   </div>
-                  <button onClick={() => deleteBlogPost(post.id)} className="text-gray-400 hover:text-red-500"><span className="material-symbols-outlined">delete</span></button>
+
+                  <div className="flex gap-2">
+                    <button onClick={() => handleEdit(post)} className="text-gray-400 hover:text-blue-500"><span className="material-symbols-outlined">edit</span></button>
+                    <button onClick={() => deleteBlogPost(post.id)} className="text-gray-400 hover:text-red-500"><span className="material-symbols-outlined">delete</span></button>
+                  </div>
                 </div>
               ))}
               {activeTab === 'pages' && pages.map(page => (
@@ -396,6 +425,7 @@ const AdminDashboard: React.FC = () => {
                   </div>
                   <div className="flex gap-2">
                     <a href={`/#/${page.slug}`} target="_blank" className="text-gray-400 hover:text-primary"><span className="material-symbols-outlined">visibility</span></a>
+                    <button onClick={() => handleEdit(page)} className="text-gray-400 hover:text-blue-500"><span className="material-symbols-outlined">edit</span></button>
                     <button onClick={() => deletePage(page.id)} className="text-gray-400 hover:text-red-500"><span className="material-symbols-outlined">delete</span></button>
                   </div>
                 </div>
@@ -409,18 +439,20 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-bold mb-4">Yeni Kayıt Ekle</h3>
-            {renderForm()}
-            <div className="flex justify-end gap-3 mt-4">
-              <button onClick={closeModal} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">İptal</button>
-              <button onClick={handleCreate} className="px-4 py-2 bg-primary text-white rounded font-bold hover:bg-primary-dark">Kaydet</button>
+      {
+        isModalOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl p-6 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
+              <h3 className="text-lg font-bold mb-4">{editingId ? 'Kaydı Düzenle' : 'Yeni Kayıt Ekle'}</h3>
+              {renderForm()}
+              <div className="flex justify-end gap-3 mt-4">
+                <button onClick={closeModal} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">İptal</button>
+                <button onClick={handleCreate} className="px-4 py-2 bg-primary text-white rounded font-bold hover:bg-primary-dark">{editingId ? 'Güncelle' : 'Kaydet'}</button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
     </div>
   );
 };

@@ -24,9 +24,41 @@ const Home: React.FC = () => {
   const displayServices = homeServices && homeServices.length > 0 ? homeServices : defaultServices;
   const getServiceLink = (link: string) => link || '#';
 
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://www.ionet.com.tr/#organization",
+        "name": "I/ONET Teknoloji",
+        "url": "https://www.ionet.com.tr",
+        "logo": getContent('header_logo_image') || "https://www.ionet.com.tr/logo.png",
+        "sameAs": [
+          getContent('social_linkedin', 'https://linkedin.com'),
+          getContent('social_twitter', 'https://twitter.com'),
+          getContent('social_facebook', 'https://facebook.com')
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://www.ionet.com.tr/#website",
+        "url": "https://www.ionet.com.tr",
+        "name": "I/ONET Teknoloji",
+        "publisher": {
+          "@id": "https://www.ionet.com.tr/#organization"
+        }
+      }
+    ]
+  };
+
   return (
     <>
-      <SEO title="Ana Sayfa" />
+      <SEO
+        title="Ana Sayfa"
+        canonical="https://www.ionet.com.tr"
+        jsonLd={organizationSchema}
+        description={getContent('site_description', 'I/ONET Teknoloji - Geleceğin Teknolojisi')}
+      />
       <div className="bg-white min-h-screen font-sans text-[#111418]">
         {/* Hero Section */}
         <section className="relative w-full min-h-[600px] flex items-center justify-center bg-secondary pt-10 overflow-hidden">

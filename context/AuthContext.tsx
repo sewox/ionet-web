@@ -2,7 +2,7 @@ import React, { createContext, useState, useContext, ReactNode } from 'react';
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: (password: string) => boolean;
+  login: (password: string) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -10,22 +10,33 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return localStorage.getItem('isAdmin') === 'true';
+    return !!localStorage.getItem('authToken');
   });
 
-  const login = (password: string) => {
-    // Simple hardcoded password for demonstration
-    if (password === 'admin123') {
-      setIsAuthenticated(true);
-      localStorage.setItem('isAdmin', 'true');
-      return true;
+  const login = async (password: string) => {
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      const data = await res.json();
+
+      if (data.success && data.token) {
+        setIsAuthenticated(true);
+        localStorage.setItem('authToken', data.token);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
     }
-    return false;
   };
 
   const logout = () => {
     setIsAuthenticated(false);
-    localStorage.removeItem('isAdmin');
+    localStorage.removeItem('authToken');
   };
 
   return (

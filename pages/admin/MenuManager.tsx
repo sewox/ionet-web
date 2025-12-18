@@ -2,20 +2,36 @@ import React, { useState } from 'react';
 import { useData } from '../../context/DataContext';
 
 const MenuManager: React.FC = () => {
-    const { menuItems, addMenuItem, deleteMenuItem } = useData();
+    const { menuItems, addMenuItem, updateMenuItem, deleteMenuItem } = useData();
     const [newItem, setNewItem] = useState({ label: '', url: '', order_index: 0 });
+    const [editingId, setEditingId] = useState<string | null>(null);
 
     const handleAdd = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newItem.label || !newItem.url) return;
 
-        await addMenuItem({
-            id: Date.now().toString(),
-            label: newItem.label,
-            url: newItem.url,
-            order_index: menuItems.length + 1
-        });
+        if (editingId) {
+            await updateMenuItem({ ...newItem, id: editingId, order_index: newItem.order_index || 0 } as any);
+            setEditingId(null);
+        } else {
+            await addMenuItem({
+                id: Date.now().toString(),
+                label: newItem.label,
+                url: newItem.url,
+                order_index: menuItems.length + 1
+            });
+        }
         setNewItem({ label: '', url: '', order_index: 0 });
+    };
+
+    const handleEdit = (item: any) => {
+        setNewItem({ label: item.label, url: item.url, order_index: item.order_index });
+        setEditingId(item.id);
+    };
+
+    const handleCancel = () => {
+        setNewItem({ label: '', url: '', order_index: 0 });
+        setEditingId(null);
     };
 
     return (
@@ -44,12 +60,20 @@ const MenuManager: React.FC = () => {
                                             <p className="text-xs text-gray-500">{item.url}</p>
                                         </div>
                                     </div>
-                                    <button
-                                        onClick={() => deleteMenuItem(item.id)}
-                                        className="text-gray-400 hover:text-red-500 transition-colors p-2"
-                                    >
-                                        <span className="material-symbols-outlined">delete</span>
-                                    </button>
+                                    <div className="flex gap-1">
+                                        <button
+                                            onClick={() => handleEdit(item)}
+                                            className="text-gray-400 hover:text-blue-500 transition-colors p-2"
+                                        >
+                                            <span className="material-symbols-outlined">edit</span>
+                                        </button>
+                                        <button
+                                            onClick={() => deleteMenuItem(item.id)}
+                                            className="text-gray-400 hover:text-red-500 transition-colors p-2"
+                                        >
+                                            <span className="material-symbols-outlined">delete</span>
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -58,7 +82,7 @@ const MenuManager: React.FC = () => {
 
                 {/* Ekleme Formu */}
                 <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 h-fit">
-                    <h4 className="font-semibold text-gray-800 mb-4">Yeni Menü Ekle</h4>
+                    <h4 className="font-semibold text-gray-800 mb-4">{editingId ? 'Menüyü Düzenle' : 'Yeni Menü Ekle'}</h4>
                     <form onSubmit={handleAdd} className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Menü Adı</label>
@@ -80,12 +104,23 @@ const MenuManager: React.FC = () => {
                                 className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors text-sm"
                             />
                         </div>
-                        <button
-                            type="submit"
-                            className="w-full bg-primary text-white font-bold py-2 rounded-lg hover:bg-primary-dark transition-colors shadow-lg shadow-primary/25"
-                        >
-                            Ekle
-                        </button>
+                        <div className="flex gap-2">
+                            {editingId && (
+                                <button
+                                    type="button"
+                                    onClick={handleCancel}
+                                    className="w-full bg-gray-200 text-gray-700 font-bold py-2 rounded-lg hover:bg-gray-300 transition-colors"
+                                >
+                                    İptal
+                                </button>
+                            )}
+                            <button
+                                type="submit"
+                                className="w-full bg-primary text-white font-bold py-2 rounded-lg hover:bg-primary-dark transition-colors shadow-lg shadow-primary/25"
+                            >
+                                {editingId ? 'Güncelle' : 'Ekle'}
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>

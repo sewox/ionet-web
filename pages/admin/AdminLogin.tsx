@@ -8,9 +8,9 @@ const AdminLogin: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (login(password)) {
+    if (await login(password)) {
       navigate('/admin/dashboard');
     } else {
       setError('Hatalı şifre. Lütfen tekrar deneyin.');
@@ -27,7 +27,7 @@ const AdminLogin: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">Yönetim Paneli</h1>
           <p className="text-gray-500 text-sm mt-1">Devam etmek için giriş yapın</p>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Yönetici Şifresi</label>
@@ -39,7 +39,7 @@ const AdminLogin: React.FC = () => {
               placeholder="••••••••"
             />
           </div>
-          
+
           {error && <p className="text-red-500 text-sm font-medium">{error}</p>}
 
           <button
@@ -50,7 +50,7 @@ const AdminLogin: React.FC = () => {
             Giriş Yap
           </button>
         </form>
-        
+
         <div className="mt-6 text-center text-xs text-gray-400">
           <p>Demo Şifre: admin123</p>
         </div>

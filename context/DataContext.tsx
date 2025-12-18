@@ -142,38 +142,53 @@ interface DataContextType {
   testimonials: Testimonial[];
   careerValues: CareerValue[];
   careerTechStack: CareerTech[];
+  legalSections: LegalSection[];
   addBlogPost: (post: BlogPost) => Promise<void>;
+  updateBlogPost: (post: BlogPost) => Promise<void>;
   deleteBlogPost: (id: string) => Promise<void>;
   addJob: (job: Job) => Promise<void>;
+  updateJob: (job: Job) => Promise<void>;
   deleteJob: (id: string) => Promise<void>;
   addProject: (project: Project) => Promise<void>;
+  updateProject: (project: Project) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
   addPage: (page: Page) => Promise<void>;
+  updatePage: (page: Page) => Promise<void>;
   deletePage: (id: string) => Promise<void>;
   sendMessage: (msg: Message) => Promise<void>;
   deleteMessage: (id: string) => Promise<void>;
   updateSetting: (key: string, value: string, group?: string, type?: 'text' | 'long_text' | 'image') => Promise<void>;
+  deleteSetting: (key: string) => Promise<void>;
   addMenuItem: (item: MenuItem) => Promise<void>;
+  updateMenuItem: (item: MenuItem) => Promise<void>;
   deleteMenuItem: (id: string) => Promise<void>;
   addFeature: (feature: Feature) => Promise<void>;
+  updateFeature: (feature: Feature) => Promise<void>;
   deleteFeature: (id: string) => Promise<void>;
   addService: (service: ServiceItem) => Promise<void>;
+  updateService: (service: ServiceItem) => Promise<void>;
   deleteService: (id: string) => Promise<void>;
   addInfraFeature: (feature: InfraFeature) => Promise<void>;
+  updateInfraFeature: (feature: InfraFeature) => Promise<void>;
   deleteInfraFeature: (id: string) => Promise<void>;
   addTechPartner: (partner: TechPartner) => Promise<void>;
+  updateTechPartner: (partner: TechPartner) => Promise<void>;
   deleteTechPartner: (id: string) => Promise<void>;
   addTestimonial: (testimonial: Testimonial) => Promise<void>;
+  updateTestimonial: (testimonial: Testimonial) => Promise<void>;
   deleteTestimonial: (id: string) => Promise<void>;
   addCareerValue: (val: CareerValue) => Promise<void>;
+  updateCareerValue: (val: CareerValue) => Promise<void>;
   deleteCareerValue: (id: string) => Promise<void>;
   addCareerTech: (tech: CareerTech) => Promise<void>;
+  updateCareerTech: (tech: CareerTech) => Promise<void>;
   deleteCareerTech: (id: string) => Promise<void>;
+  addLegalSection: (sec: LegalSection) => Promise<void>;
+  updateLegalSection: (sec: LegalSection) => Promise<void>;
+  deleteLegalSection: (id: string) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
-
-// Initial Data...
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
@@ -236,10 +251,18 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   // API Helpers...
+  const getHeaders = () => {
+    const token = localStorage.getItem('authToken');
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : ''
+    };
+  };
+
   const postData = async (url: string, data: any) => {
     const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getHeaders(),
       body: JSON.stringify(data)
     });
     if (!res.ok) {
@@ -249,23 +272,40 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     fetchData();
   };
 
+  const updateData = async (url: string, data: any) => {
+    const res = await fetch(url + '/' + data.id, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Update Failed');
+    fetchData(); // Refresh data
+  };
+
   const deleteData = async (url: string) => {
-    await fetch(url, { method: 'DELETE' });
+    const res = await fetch(url, {
+      method: 'DELETE',
+      headers: getHeaders()
+    });
+    if (!res.ok) throw new Error('Delete Failed');
     fetchData();
   };
 
   // Actions
   const addBlogPost = async (post: BlogPost) => postData('/api/blog_posts', post);
+  const updateBlogPost = async (post: BlogPost) => updateData('/api/blog_posts', post);
   const deleteBlogPost = async (id: string) => deleteData(`/api/blog_posts/${id}`);
 
-  // ... other actions
   const addJob = async (job: Job) => postData('/api/jobs', job);
+  const updateJob = async (job: Job) => updateData('/api/jobs', job);
   const deleteJob = async (id: string) => deleteData(`/api/jobs/${id}`);
 
   const addProject = async (project: Project) => postData('/api/projects', project);
+  const updateProject = async (project: Project) => updateData('/api/projects', project);
   const deleteProject = async (id: string) => deleteData(`/api/projects/${id}`);
 
   const addPage = async (page: Page) => postData('/api/pages', page);
+  const updatePage = async (page: Page) => updateData('/api/pages', page);
   const deletePage = async (id: string) => deleteData(`/api/pages/${id}`);
 
   const sendMessage = async (msg: Message) => postData('/api/messages', msg);
@@ -274,52 +314,62 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const updateSetting = async (ckey: string, value: string, group_name: string = 'general', type: 'text' | 'long_text' | 'image' = 'text') => {
     await postData('/api/settings', { ckey, value, group_name, type });
   };
+  const deleteSetting = async (ckey: string) => deleteData(`/api/settings/${ckey}`);
 
   const addMenuItem = async (item: MenuItem) => postData('/api/menu_items', item);
+  const updateMenuItem = async (item: MenuItem) => updateData('/api/menu_items', item);
   const deleteMenuItem = async (id: string) => deleteData(`/api/menu_items/${id}`);
 
   const addFeature = async (feature: Feature) => postData('/api/home_features', feature);
+  const updateFeature = async (feature: Feature) => updateData('/api/home_features', feature);
   const deleteFeature = async (id: string) => deleteData(`/api/home_features/${id}`);
 
   const addService = async (service: ServiceItem) => postData('/api/home_services', service);
+  const updateService = async (service: ServiceItem) => updateData('/api/home_services', service);
   const deleteService = async (id: string) => deleteData(`/api/home_services/${id}`);
 
   const addInfraFeature = async (feature: InfraFeature) => postData('/api/infrastructure_features', feature);
+  const updateInfraFeature = async (feature: InfraFeature) => updateData('/api/infrastructure_features', feature);
   const deleteInfraFeature = async (id: string) => deleteData(`/api/infrastructure_features/${id}`);
 
   const addTechPartner = async (partner: TechPartner) => postData('/api/tech_partners', partner);
+  const updateTechPartner = async (partner: TechPartner) => updateData('/api/tech_partners', partner);
   const deleteTechPartner = async (id: string) => deleteData(`/api/tech_partners/${id}`);
 
   const addTestimonial = async (testimonial: Testimonial) => postData('/api/testimonials', testimonial);
+  const updateTestimonial = async (testimonial: Testimonial) => updateData('/api/testimonials', testimonial);
   const deleteTestimonial = async (id: string) => deleteData(`/api/testimonials/${id}`);
 
   const addCareerValue = async (val: CareerValue) => postData('/api/career_values', val);
+  const updateCareerValue = async (val: CareerValue) => updateData('/api/career_values', val);
   const deleteCareerValue = async (id: string) => deleteData(`/api/career_values/${id}`);
 
   const addCareerTech = async (tech: CareerTech) => postData('/api/career_tech_stack', tech);
+  const updateCareerTech = async (tech: CareerTech) => updateData('/api/career_tech_stack', tech);
   const deleteCareerTech = async (id: string) => deleteData(`/api/career_tech_stack/${id}`);
 
   const addLegalSection = async (sec: LegalSection) => postData('/api/legal_sections', sec);
+  const updateLegalSection = async (sec: LegalSection) => updateData('/api/legal_sections', sec);
   const deleteLegalSection = async (id: string) => deleteData(`/api/legal_sections/${id}`);
 
   return (
     <DataContext.Provider value={{
       blogPosts, jobs, projects, pages, messages, siteSettings, menuItems, homeFeatures, homeServices, infraFeatures, techPartners, testimonials, careerValues, careerTechStack, legalSections,
-      addBlogPost, deleteBlogPost,
-      addJob, deleteJob,
-      addProject, deleteProject,
-      addPage, deletePage,
+      addBlogPost, updateBlogPost, deleteBlogPost,
+      addJob, updateJob, deleteJob,
+      addProject, updateProject, deleteProject,
+      addPage, updatePage, deletePage,
       sendMessage, deleteMessage,
-      updateSetting,
-      addMenuItem, deleteMenuItem,
-      addFeature, deleteFeature,
-      addService, deleteService,
-      addInfraFeature, deleteInfraFeature,
-      addTechPartner, deleteTechPartner,
-      addTestimonial, deleteTestimonial,
-      addCareerValue, deleteCareerValue,
-      addCareerTech, deleteCareerTech,
-      addLegalSection, deleteLegalSection
+      updateSetting, deleteSetting,
+      addMenuItem, updateMenuItem, deleteMenuItem,
+      addFeature, updateFeature, deleteFeature,
+      addService, updateService, deleteService,
+      addInfraFeature, updateInfraFeature, deleteInfraFeature,
+      addTechPartner, updateTechPartner, deleteTechPartner,
+      addTestimonial, updateTestimonial, deleteTestimonial,
+      addCareerValue, updateCareerValue, deleteCareerValue,
+      addCareerTech, updateCareerTech, deleteCareerTech,
+      addLegalSection, updateLegalSection, deleteLegalSection
     }}>
       {children}
     </DataContext.Provider>

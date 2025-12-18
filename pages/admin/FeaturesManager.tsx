@@ -2,21 +2,37 @@ import React, { useState } from 'react';
 import { useData } from '../../context/DataContext';
 
 const FeaturesManager: React.FC = () => {
-    const { homeFeatures, addFeature, deleteFeature } = useData();
+    const { homeFeatures, addFeature, updateFeature, deleteFeature } = useData();
     const [newItem, setNewItem] = useState({ title: '', description: '', icon: 'star', order_index: 0 });
+    const [editingId, setEditingId] = useState<string | null>(null);
 
     const handleAdd = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newItem.title || !newItem.description) return;
 
-        await addFeature({
-            id: Date.now().toString(),
-            title: newItem.title,
-            description: newItem.description,
-            icon: newItem.icon,
-            order_index: homeFeatures.length + 1
-        });
+        if (editingId) {
+            await updateFeature({ ...newItem, id: editingId, order_index: newItem.order_index || 0 } as any);
+            setEditingId(null);
+        } else {
+            await addFeature({
+                id: Date.now().toString(),
+                title: newItem.title,
+                description: newItem.description,
+                icon: newItem.icon,
+                order_index: homeFeatures.length + 1
+            });
+        }
         setNewItem({ title: '', description: '', icon: 'star', order_index: 0 });
+    };
+
+    const handleEdit = (item: any) => {
+        setNewItem({ title: item.title, description: item.description, icon: item.icon, order_index: item.order_index });
+        setEditingId(item.id);
+    };
+
+    const handleCancel = () => {
+        setNewItem({ title: '', description: '', icon: 'star', order_index: 0 });
+        setEditingId(null);
     };
 
     return (
@@ -45,12 +61,20 @@ const FeaturesManager: React.FC = () => {
                                             <p className="text-xs text-gray-500 line-clamp-3">{item.description}</p>
                                         </div>
                                     </div>
-                                    <button
-                                        onClick={() => deleteFeature(item.id)}
-                                        className="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition-colors p-1"
-                                    >
-                                        <span className="material-symbols-outlined text-lg">delete</span>
-                                    </button>
+                                    <div className="absolute top-2 right-2 flex gap-1">
+                                        <button
+                                            onClick={() => handleEdit(item)}
+                                            className="text-gray-400 hover:text-blue-500 transition-colors p-1"
+                                        >
+                                            <span className="material-symbols-outlined text-lg">edit</span>
+                                        </button>
+                                        <button
+                                            onClick={() => deleteFeature(item.id)}
+                                            className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                                        >
+                                            <span className="material-symbols-outlined text-lg">delete</span>
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -59,7 +83,7 @@ const FeaturesManager: React.FC = () => {
 
                 {/* Ekleme Formu */}
                 <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 h-fit">
-                    <h4 className="font-semibold text-gray-800 mb-4">Yeni Kart Ekle</h4>
+                    <h4 className="font-semibold text-gray-800 mb-4">{editingId ? 'Kartı Düzenle' : 'Yeni Kart Ekle'}</h4>
                     <form onSubmit={handleAdd} className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Başlık</label>
@@ -99,12 +123,23 @@ const FeaturesManager: React.FC = () => {
                                 className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors text-sm"
                             />
                         </div>
-                        <button
-                            type="submit"
-                            className="w-full bg-primary text-white font-bold py-2 rounded-lg hover:bg-primary-dark transition-colors shadow-lg shadow-primary/25"
-                        >
-                            Ekle
-                        </button>
+                        <div className="flex gap-2">
+                            {editingId && (
+                                <button
+                                    type="button"
+                                    onClick={handleCancel}
+                                    className="w-full bg-gray-200 text-gray-700 font-bold py-2 rounded-lg hover:bg-gray-300 transition-colors"
+                                >
+                                    İptal
+                                </button>
+                            )}
+                            <button
+                                type="submit"
+                                className="w-full bg-primary text-white font-bold py-2 rounded-lg hover:bg-primary-dark transition-colors shadow-lg shadow-primary/25"
+                            >
+                                {editingId ? 'Güncelle' : 'Ekle'}
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>

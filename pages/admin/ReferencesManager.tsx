@@ -3,51 +3,108 @@ import { useData } from '../../context/DataContext';
 
 const ReferencesManager: React.FC = () => {
     const {
-        projects, addProject, deleteProject,
-        testimonials, addTestimonial, deleteTestimonial
+        projects, addProject, updateProject, deleteProject,
+        testimonials, addTestimonial, updateTestimonial, deleteTestimonial
     } = useData();
 
     // Project States
     const [projTitle, setProjTitle] = useState('');
     const [projCat, setProjCat] = useState('');
     const [projDesc, setProjDesc] = useState('');
+    const [editingProjId, setEditingProjId] = useState<string | null>(null);
 
     // Testimonial States
     const [testName, setTestName] = useState('');
     const [testTitle, setTestTitle] = useState('');
     const [testQuote, setTestQuote] = useState('');
     const [testImg, setTestImg] = useState('');
+    const [editingTestId, setEditingTestId] = useState<string | null>(null);
 
     const handleAddProject = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!projTitle) return;
-        await addProject({
-            id: Date.now().toString(),
-            title: projTitle,
-            category: projCat,
-            description: projDesc,
-            image: '' // Not used in UI essentially, but required by type
-        });
+
+        if (editingProjId) {
+            await updateProject({
+                id: editingProjId,
+                title: projTitle,
+                category: projCat,
+                description: projDesc,
+                image: ''
+            } as any);
+            setEditingProjId(null);
+        } else {
+            await addProject({
+                id: Date.now().toString(),
+                title: projTitle,
+                category: projCat,
+                description: projDesc,
+                image: '' // Not used in UI essentially, but required by type
+            });
+        }
         setProjTitle('');
         setProjCat('');
         setProjDesc('');
     };
 
+    const handleEditProject = (item: any) => {
+        setProjTitle(item.title);
+        setProjCat(item.category);
+        setProjDesc(item.description);
+        setEditingProjId(item.id);
+    };
+
+    const handleCancelProject = () => {
+        setProjTitle('');
+        setProjCat('');
+        setProjDesc('');
+        setEditingProjId(null);
+    };
+
     const handleAddTestimonial = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!testName) return;
-        await addTestimonial({
-            id: Date.now().toString(),
-            name: testName,
-            title: testTitle,
-            quote: testQuote,
-            image: testImg,
-            order_index: testimonials.length + 1
-        });
+
+        if (editingTestId) {
+            await updateTestimonial({
+                id: editingTestId,
+                name: testName,
+                title: testTitle,
+                quote: testQuote,
+                image: testImg,
+                order_index: 0
+            } as any);
+            setEditingTestId(null);
+        } else {
+            await addTestimonial({
+                id: Date.now().toString(),
+                name: testName,
+                title: testTitle,
+                quote: testQuote,
+                image: testImg,
+                order_index: testimonials.length + 1
+            });
+        }
         setTestName('');
         setTestTitle('');
         setTestQuote('');
         setTestImg('');
+    };
+
+    const handleEditTestimonial = (item: any) => {
+        setTestName(item.name);
+        setTestTitle(item.title);
+        setTestQuote(item.quote);
+        setTestImg(item.image);
+        setEditingTestId(item.id);
+    };
+
+    const handleCancelTestimonial = () => {
+        setTestName('');
+        setTestTitle('');
+        setTestQuote('');
+        setTestImg('');
+        setEditingTestId(null);
     };
 
     return (
@@ -70,12 +127,20 @@ const ReferencesManager: React.FC = () => {
                                     <h5 className="font-bold text-gray-900 text-sm mb-1">{item.title}</h5>
                                     <p className="text-xs text-gray-500 line-clamp-2">{item.description}</p>
 
-                                    <button
-                                        onClick={() => deleteProject(item.id)}
-                                        className="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition-colors p-1"
-                                    >
-                                        <span className="material-symbols-outlined text-lg">delete</span>
-                                    </button>
+                                    <div className="absolute top-2 right-2 flex gap-1">
+                                        <button
+                                            onClick={() => handleEditProject(item)}
+                                            className="text-gray-400 hover:text-blue-500 transition-colors p-1"
+                                        >
+                                            <span className="material-symbols-outlined text-lg">edit</span>
+                                        </button>
+                                        <button
+                                            onClick={() => deleteProject(item.id)}
+                                            className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                                        >
+                                            <span className="material-symbols-outlined text-lg">delete</span>
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -83,7 +148,7 @@ const ReferencesManager: React.FC = () => {
 
                     {/* Add Form */}
                     <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 h-fit">
-                        <h4 className="font-semibold text-gray-800 mb-4">Yeni Proje Ekle</h4>
+                        <h4 className="font-semibold text-gray-800 mb-4">{editingProjId ? 'Projeyi Düzenle' : 'Yeni Proje Ekle'}</h4>
                         <form onSubmit={handleAddProject} className="space-y-3">
                             <input
                                 type="text" placeholder="Proje Adı" value={projTitle} onChange={e => setProjTitle(e.target.value)}
@@ -97,7 +162,10 @@ const ReferencesManager: React.FC = () => {
                                 rows={3} placeholder="Kısa Açıklama" value={projDesc} onChange={e => setProjDesc(e.target.value)}
                                 className="w-full px-3 py-2 rounded border border-gray-300 text-sm"
                             />
-                            <button type="submit" className="w-full bg-primary text-white font-bold py-2 rounded shadow-sm hover:bg-primary-dark text-sm">Ekle</button>
+                            <div className="flex gap-2">
+                                {editingProjId && <button type="button" onClick={handleCancelProject} className="flex-1 bg-gray-200 text-gray-700 font-bold py-2 rounded shadow-sm hover:bg-gray-300 text-sm">İptal</button>}
+                                <button type="submit" className="flex-1 bg-primary text-white font-bold py-2 rounded shadow-sm hover:bg-primary-dark text-sm">{editingProjId ? 'Güncelle' : 'Ekle'}</button>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -121,17 +189,15 @@ const ReferencesManager: React.FC = () => {
                                     <p className="text-xs text-primary font-medium mb-1">{t.title}</p>
                                     <p className="text-xs text-gray-500 italic">"{t.quote}"</p>
                                 </div>
-                                <button
-                                    onClick={() => deleteTestimonial(t.id)}
-                                    className="absolute right-2 top-2 text-gray-300 hover:text-red-500"
-                                >
-                                    <span className="material-symbols-outlined text-lg">cancel</span>
-                                </button>
+                                <div className="absolute right-2 top-2 flex gap-1">
+                                    <button onClick={() => handleEditTestimonial(t)} className="text-gray-300 hover:text-blue-500"><span className="material-symbols-outlined text-lg">edit</span></button>
+                                    <button onClick={() => deleteTestimonial(t.id)} className="text-gray-300 hover:text-red-500"><span className="material-symbols-outlined text-lg">cancel</span></button>
+                                </div>
                             </div>
                         ))}
                     </div>
                     <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 h-fit">
-                        <h4 className="font-semibold text-gray-800 mb-4">Yeni Yorum Ekle</h4>
+                        <h4 className="font-semibold text-gray-800 mb-4">{editingTestId ? 'Yorumu Düzenle' : 'Yeni Yorum Ekle'}</h4>
                         <form onSubmit={handleAddTestimonial} className="space-y-3">
                             <input
                                 type="text" placeholder="İsim Soyisim" value={testName} onChange={e => setTestName(e.target.value)}
@@ -149,7 +215,10 @@ const ReferencesManager: React.FC = () => {
                                 type="text" placeholder="Profil Resmi URL" value={testImg} onChange={e => setTestImg(e.target.value)}
                                 className="w-full px-3 py-2 rounded border border-gray-300 text-sm"
                             />
-                            <button type="submit" className="w-full bg-primary text-white font-bold py-2 rounded shadow-sm hover:bg-primary-dark text-sm">Ekle</button>
+                            <div className="flex gap-2">
+                                {editingTestId && <button type="button" onClick={handleCancelTestimonial} className="flex-1 bg-gray-200 text-gray-700 font-bold py-2 rounded shadow-sm hover:bg-gray-300 text-sm">İptal</button>}
+                                <button type="submit" className="flex-1 bg-primary text-white font-bold py-2 rounded shadow-sm hover:bg-primary-dark text-sm">{editingTestId ? 'Güncelle' : 'Ekle'}</button>
+                            </div>
                         </form>
                     </div>
                 </div>
