@@ -89,21 +89,34 @@ app.use(async (req, res, next) => {
 // Middleware for Auth - JWT based
 const authenticate = (req, res, next) => {
     const authHeader = req.headers.authorization;
+    let authFailed = false;
+    let errorReason = 'Unauthorized'; // Generic error for all cases
+    
     if (authHeader) {
         const token = authHeader.split(' ')[1];
-        try {
-            const jwtSecret = process.env.JWT_SECRET;
-            if (!jwtSecret) {
-                throw new Error('JWT_SECRET not configured');
+        if (token) {
+            try {
+                const jwtSecret = process.env.JWT_SECRET;
+                if (!jwtSecret) {
+                    throw new Error('JWT_SECRET not configured');
+                }
+                const decoded = jwt.verify(token, jwtSecret);
+                req.user = decoded;
+                return next();
+            } catch (err) {
+                // Log internally but don't expose error details to client
+                console.error("JWT verification failed");
+                authFailed = true;
             }
-            const decoded = jwt.verify(token, jwtSecret);
-            req.user = decoded;
-            return next();
-        } catch (err) {
-            console.error("JWT verification failed:", err.message);
+        } else {
+            authFailed = true;
         }
+    } else {
+        authFailed = true;
     }
-    return res.status(401).json({ error: 'Unauthorized' });
+    
+    // Consistent response for all authentication failures
+    return res.status(401).json({ error: errorReason });
 };
 
 // Whitelist of allowed tables for CRUD operations
