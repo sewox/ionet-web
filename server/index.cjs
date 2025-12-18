@@ -663,11 +663,17 @@ app.get('/robots.txt', async (req, res) => {
 });
 
 // --- Serve Frontend (Production) ---
+// --- Serve Frontend (Production) ---
 const distPath = path.join(__dirname, '../dist');
 if (fs.existsSync(distPath)) {
-    app.use(express.static(distPath));
-    // SPA Catch-all
-    app.get('*', (req, res) => {
+    // Serve static files under /ionet-web
+    app.use('/ionet-web', express.static(distPath));
+
+    // Redirect root to /ionet-web
+    app.get('/', (req, res) => res.redirect('/ionet-web'));
+
+    // SPA Catch-all for /ionet-web/*
+    app.get('/ionet-web/*', (req, res) => {
         if (req.originalUrl.startsWith('/api')) return res.status(404).json({ error: 'Not found' });
         res.sendFile(path.join(distPath, 'index.html'));
     });
