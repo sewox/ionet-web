@@ -22,7 +22,6 @@ const Home: React.FC = () => {
 
   const displayFeatures = homeFeatures && homeFeatures.length > 0 ? homeFeatures : defaultFeatures;
   const displayServices = homeServices && homeServices.length > 0 ? homeServices : defaultServices;
-  const getServiceLink = (link: string) => link || '#';
 
   const organizationSchema = {
     "@context": "https://schema.org",

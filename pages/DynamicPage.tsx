@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import { useData, Page } from '../context/DataContext';
+import { Page } from '../context/DataContext';
 
 const DynamicPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();

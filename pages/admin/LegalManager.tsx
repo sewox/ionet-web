@@ -3,7 +3,7 @@ import { useData } from '../../context/DataContext';
 import TextEditor from '../../components/TextEditor';
 
 const LegalManager: React.FC = () => {
-    const { legalSections, addLegalSection, updateLegalSection, deleteLegalSection } = useData() as any;
+    const { legalSections, addLegalSection, updateLegalSection, deleteLegalSection, refreshData } = useData() as any;
 
     // States
     const [title, setTitle] = useState('');
@@ -16,12 +16,17 @@ const LegalManager: React.FC = () => {
         const maxOrder = legalSections.reduce((max: number, i: any) => i.order_index > max ? i.order_index : max, 0);
 
         if (editingId) {
+            const existingSection = legalSections.find((section: any) => section.id === editingId);
+            const orderIndex = existingSection && typeof existingSection.order_index === 'number'
+                ? existingSection.order_index
+                : maxOrder + 1;
+
             await updateLegalSection({
                 id: editingId,
                 title,
                 content,
                 anchor,
-                order_index: 0
+                order_index: orderIndex
             });
             setEditingId(null);
         } else {
@@ -37,8 +42,11 @@ const LegalManager: React.FC = () => {
         setTitle('');
         setContent('');
         setAnchor('');
-        // To refresh data, normally we rely on context refresh or manual refresh.
-        window.location.reload();
+        
+        // Refresh data from context instead of full page reload
+        if (refreshData) {
+            await refreshData();
+        }
     };
 
     const handleEdit = (section: any) => {
@@ -59,7 +67,10 @@ const LegalManager: React.FC = () => {
     const handleDelete = async (id: string) => {
         if (confirm('Bu bölümü silmek istediğinize emin misiniz?')) {
             await deleteLegalSection(id);
-            window.location.reload();
+            // Refresh data from context instead of full page reload
+            if (refreshData) {
+                await refreshData();
+            }
         }
     };
 
