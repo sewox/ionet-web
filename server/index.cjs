@@ -8,7 +8,19 @@ const path = require('path');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
+const validator = require('validator');
+const xss = require('xss');
 require('dotenv').config();
+
+// Validate required environment variables on startup
+const requiredEnvVars = ['JWT_SECRET', 'ADMIN_PASSWORD_HASH'];
+for (const envVar of requiredEnvVars) {
+    if (!process.env[envVar]) {
+        console.error(`ERROR: Required environment variable ${envVar} is not set.`);
+        console.error('Please check server/README.md for setup instructions.');
+        process.exit(1);
+    }
+}
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -51,7 +63,11 @@ const authenticate = (req, res, next) => {
     if (authHeader) {
         const token = authHeader.split(' ')[1];
         try {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret-change-in-production');
+            const jwtSecret = process.env.JWT_SECRET;
+            if (!jwtSecret) {
+                throw new Error('JWT_SECRET not configured');
+            }
+            const decoded = jwt.verify(token, jwtSecret);
             req.user = decoded;
             return next();
         } catch (err) {
@@ -128,16 +144,21 @@ const createCrud = (table, fields, excludeMethods = []) => {
                 if (table === 'messages') {
                     const { name, surname, email, phone, message } = data;
                     
-                    // Basic email validation
-                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                    if (email && !emailRegex.test(email)) {
+                    // Email validation using validator library
+                    if (email && !validator.isEmail(email)) {
                         return res.status(400).json({ error: "Invalid email format" });
                     }
                     
-                    // Sanitize inputs (basic)
+                    // Sanitize inputs to prevent XSS
                     if (name && name.length > 100) return res.status(400).json({ error: "Name too long" });
                     if (surname && surname.length > 100) return res.status(400).json({ error: "Surname too long" });
                     if (message && message.length > 5000) return res.status(400).json({ error: "Message too long" });
+                    
+                    // Sanitize HTML content
+                    data.name = name ? xss(name) : '';
+                    data.surname = surname ? xss(surname) : '';
+                    data.phone = phone ? xss(phone) : '';
+                    data.message = message ? xss(message) : '';
                 }
                 
                 const placeholders = fields.map(() => '?').join(',');
@@ -287,11 +308,12 @@ app.post('/api/auth/login', async (req, res) => {
     const { password } = req.body;
     
     try {
-        // Get hashed password from environment or use bcrypt to compare
+        // Get hashed password from environment
         const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
+        const jwtSecret = process.env.JWT_SECRET;
         
-        if (!adminPasswordHash) {
-            console.error('ADMIN_PASSWORD_HASH not set in environment variables');
+        if (!adminPasswordHash || !jwtSecret) {
+            console.error('Server configuration error: missing required environment variables');
             return res.status(500).json({ success: false, message: 'Server configuration error' });
         }
         
@@ -300,7 +322,7 @@ app.post('/api/auth/login', async (req, res) => {
         if (isValid) {
             const token = jwt.sign(
                 { role: 'admin' }, 
-                process.env.JWT_SECRET || 'default-secret-change-in-production',
+                jwtSecret,
                 { expiresIn: '24h' }
             );
             res.json({ success: true, token });
@@ -339,7 +361,7 @@ app.use('/api/messages', createCrud('messages', ['id', 'name', 'surname', 'email
 const settingsRouter = express.Router();
 
 // Sensitive keys that should never be exposed to non-authenticated users
-const SENSITIVE_KEYS = ['smtp_pass', 'smtp_user', 'Gemini_API', 'api_key', 'secret'];
+const SENSITIVE_KEYS = ['smtp_pass', 'smtp_user', 'Gemini_API', 'api_key', 'secret', 'password', 'token'];
 
 settingsRouter.get('/', async (req, res) => {
     try {
@@ -352,8 +374,11 @@ settingsRouter.get('/', async (req, res) => {
         if (authHeader) {
             const token = authHeader.split(' ')[1];
             try {
-                jwt.verify(token, process.env.JWT_SECRET || 'default-secret-change-in-production');
-                isAuthenticated = true;
+                const jwtSecret = process.env.JWT_SECRET;
+                if (jwtSecret) {
+                    jwt.verify(token, jwtSecret);
+                    isAuthenticated = true;
+                }
             } catch (err) {
                 // Not authenticated
             }
@@ -362,7 +387,11 @@ settingsRouter.get('/', async (req, res) => {
         // Filter out sensitive keys for non-authenticated users
         const filteredRows = isAuthenticated 
             ? rows 
-            : rows.filter(row => !SENSITIVE_KEYS.some(key => row.ckey.includes(key)));
+            : rows.filter(row => {
+                // Check if the key contains any sensitive keyword
+                const keyLower = row.ckey.toLowerCase();
+                return !SENSITIVE_KEYS.some(sensitive => keyLower === sensitive || keyLower.endsWith('_' + sensitive));
+            });
         
         res.json(filteredRows);
     } catch (err) {
