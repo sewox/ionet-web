@@ -11,6 +11,7 @@ const { v4: uuidv4 } = require('uuid');
 const validator = require('validator');
 const xss = require('xss');
 const rateLimit = require('express-rate-limit');
+const { fileTypeFromBuffer } = require('file-type');
 require('dotenv').config();
 
 // Validate required environment variables on startup
@@ -540,10 +541,69 @@ const upload = multer({
     }
 });
 
-app.post('/api/upload', uploadLimiter, authenticate, upload.single('file'), (req, res) => {
+app.post('/api/upload', uploadLimiter, authenticate, upload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
-    res.json({ url: fileUrl });
+    
+    try {
+        // Validate file content using magic bytes
+        const fs = require('fs');
+        const fileBuffer = fs.readFileSync(req.file.path);
+        const fileTypeResult = await fileTypeFromBuffer(fileBuffer);
+        
+        if (!fileTypeResult) {
+            // Unknown file type - remove the file
+            fs.unlinkSync(req.file.path);
+            return res.status(400).json({ error: 'Unknown file type' });
+        }
+        
+        // Verify the detected MIME type matches our allowed types
+        if (!ALLOWED_FILE_TYPES.includes(fileTypeResult.mime)) {
+            // File type mismatch - remove the file
+            fs.unlinkSync(req.file.path);
+            return res.status(400).json({ 
+                error: 'Invalid file type. Only images and PDFs are allowed.',
+                detected: fileTypeResult.mime
+            });
+        }
+        
+        // Additional check: ensure MIME type matches the file extension
+        const expectedMimes = {
+            '.jpg': ['image/jpeg'],
+            '.jpeg': ['image/jpeg'],
+            '.png': ['image/png'],
+            '.gif': ['image/gif'],
+            '.webp': ['image/webp'],
+            '.pdf': ['application/pdf']
+        };
+        
+        const ext = path.extname(req.file.originalname).toLowerCase();
+        const expectedMimeTypes = expectedMimes[ext];
+        
+        if (expectedMimeTypes && !expectedMimeTypes.includes(fileTypeResult.mime)) {
+            // Extension/MIME mismatch - remove the file
+            fs.unlinkSync(req.file.path);
+            return res.status(400).json({ 
+                error: 'File extension does not match file content',
+                extension: ext,
+                detected: fileTypeResult.mime
+            });
+        }
+        
+        const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+        res.json({ url: fileUrl });
+    } catch (error) {
+        // Clean up file on error
+        if (req.file && req.file.path) {
+            try {
+                const fs = require('fs');
+                fs.unlinkSync(req.file.path);
+            } catch (cleanupError) {
+                console.error('Error cleaning up file:', cleanupError);
+            }
+        }
+        console.error('File upload error:', error);
+        res.status(500).json({ error: 'File upload failed' });
+    }
 });
 
 // --- SEO Routes ---
