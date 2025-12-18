@@ -10,12 +10,16 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return !!localStorage.getItem('authToken');
+    try {
+      return !!localStorage.getItem('authToken');
+    } catch {
+      return false;
+    }
   });
 
   const login = async (password: string) => {
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch('api/auth/login', { // Relative path fix
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password })
@@ -24,7 +28,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (data.success && data.token) {
         setIsAuthenticated(true);
-        localStorage.setItem('authToken', data.token);
+        try {
+          localStorage.setItem('authToken', data.token);
+        } catch (e) {
+          console.error("Storage access denied");
+        }
         return true;
       }
       return false;
@@ -36,7 +44,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = () => {
     setIsAuthenticated(false);
-    localStorage.removeItem('authToken');
+    try {
+      localStorage.removeItem('authToken');
+    } catch (e) {
+      console.error("Storage access denied");
+    }
   };
 
   return (
