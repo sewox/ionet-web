@@ -20,15 +20,24 @@ Copy `.env.example` to `.env` and configure the following variables:
 
 3. **ALLOWED_ORIGINS**: Comma-separated list of allowed CORS origins
    ```
-   ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3001,https://yourdomain.com
+   # Frontend runs on port 3000, backend on 3001
+   ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:3001,https://yourdomain.com
    ```
 
 ### Optional Variables
 
-- **PORT**: Server port (default: 3001)
+- **PORT**: Server port (default: 3001, frontend typically uses 3000)
 - **UPLOAD_DIR**: Upload directory path (default: server/uploads/)
 - **MAX_FILE_SIZE**: Maximum file upload size in bytes (default: 52428800 = 50MB)
-- **SMTP_*** variables for email configuration
+- **SMTP_*** variables for email configuration (fallback if not configured in admin panel)
+
+### Email Configuration
+
+Email settings can be managed in two ways:
+1. **Admin Panel** (Recommended): Configure SMTP settings through the Site Settings interface
+2. **Environment Variables** (Fallback): Set SMTP_* variables in `.env` file
+
+The system checks the database first for email configuration. If not found, it falls back to environment variables.
 
 ## First Time Setup
 
