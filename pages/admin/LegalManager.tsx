@@ -3,7 +3,7 @@ import { useData } from '../../context/DataContext';
 import TextEditor from '../../components/TextEditor';
 
 const LegalManager: React.FC = () => {
-    const { legalSections, addLegalSection, updateLegalSection, deleteLegalSection, refreshData } = useData() as any;
+    const { legalSections, addLegalSection, updateLegalSection, deleteLegalSection } = useData() as any;
 
     // States
     const [title, setTitle] = useState('');
@@ -43,10 +43,7 @@ const LegalManager: React.FC = () => {
         setContent('');
         setAnchor('');
         
-        // Refresh data from context instead of full page reload
-        if (refreshData) {
-            await refreshData();
-        }
+        // Data will auto-refresh via context
     };
 
     const handleEdit = (section: any) => {
@@ -67,10 +64,7 @@ const LegalManager: React.FC = () => {
     const handleDelete = async (id: string) => {
         if (confirm('Bu bölümü silmek istediğinize emin misiniz?')) {
             await deleteLegalSection(id);
-            // Refresh data from context instead of full page reload
-            if (refreshData) {
-                await refreshData();
-            }
+            // Data will auto-refresh via context
         }
     };
 
