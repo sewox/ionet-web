@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useData } from '../../context/DataContext';
 import TextEditor from '../../components/TextEditor';
+import ConfirmModal from '../../components/ConfirmModal';
 
 const LegalManager: React.FC = () => {
     const { legalSections, addLegalSection, updateLegalSection, deleteLegalSection } = useData() as any;
@@ -10,6 +11,8 @@ const LegalManager: React.FC = () => {
     const [content, setContent] = useState('');
     const [anchor, setAnchor] = useState('');
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleteId, setDeleteId] = useState<string | null>(null);
 
     const handleAdd = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -62,10 +65,22 @@ const LegalManager: React.FC = () => {
     };
 
     const handleDelete = async (id: string) => {
-        if (confirm('Bu bölümü silmek istediğinize emin misiniz?')) {
-            await deleteLegalSection(id);
+        setDeleteId(id);
+        setShowDeleteModal(true);
+    };
+
+    const confirmDelete = async () => {
+        if (deleteId) {
+            await deleteLegalSection(deleteId);
+            setShowDeleteModal(false);
+            setDeleteId(null);
             // Data will auto-refresh via context
         }
+    };
+
+    const cancelDelete = () => {
+        setShowDeleteModal(false);
+        setDeleteId(null);
     };
 
     return (
@@ -182,6 +197,18 @@ const LegalManager: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {/* Delete Confirmation Modal */}
+            <ConfirmModal
+                isOpen={showDeleteModal}
+                title="Bölümü Sil"
+                message="Bu bölümü silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
+                confirmText="Sil"
+                cancelText="İptal"
+                onConfirm={confirmDelete}
+                onCancel={cancelDelete}
+                variant="danger"
+            />
         </div>
     );
 };
