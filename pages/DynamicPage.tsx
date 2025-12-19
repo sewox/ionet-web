@@ -11,7 +11,7 @@ const DynamicPage: React.FC = () => {
     useEffect(() => {
         setLoading(true);
         setError(false);
-        fetch(`/api/pages/slug/${slug}`)
+        fetch(`ionet-web/api/pages/slug/${slug}`)
             .then(res => {
                 if (!res.ok) throw new Error('Not found');
                 return res.json();
