@@ -6,6 +6,7 @@ module.exports = {
             NODE_ENV: "production",
             PORT: 3001
         },
+        cwd: "./",
         // Watch disable in production typically
         watch: false,
         instances: 1,
