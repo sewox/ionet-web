@@ -19,7 +19,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (password: string) => {
     try {
-      const res = await fetch('api/auth/login', { // Relative path fix
+      // API Base Path
+      const API_BASE = ((import.meta as any).env.VITE_BASE_PATH || '/ionet-web').replace(/\/$/, '');
+
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password })

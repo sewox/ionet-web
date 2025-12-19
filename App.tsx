@@ -276,7 +276,7 @@ const App: React.FC = () => {
   return (
     <AuthProvider>
       <DataProvider>
-        <BrowserRouter basename="/ionet-web">
+        <BrowserRouter basename={import.meta.env.VITE_BASE_PATH || "/ionet-web"}>
           <div className="flex flex-col min-h-screen">
             <Header />
             <main className="flex-grow">

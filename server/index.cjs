@@ -26,6 +26,8 @@ for (const envVar of requiredEnvVars) {
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+// Handle both leading/trailing slashes for consistency
+const BASE_PATH = (process.env.VITE_BASE_PATH || '/ionet-web').replace(/\/+$/, '');
 
 // CORS Configuration - restrict to allowed origins
 const allowedOrigins = process.env.ALLOWED_ORIGINS
@@ -46,7 +48,8 @@ app.use(cors({
 }));
 
 app.use(bodyParser.json({ limit: '50mb' }));
-app.use('/uploads', express.static(path.join(__dirname, process.env.UPLOAD_DIR || 'uploads')));
+// Serve uploads under BASE_PATH/uploads
+app.use(`${BASE_PATH}/uploads`, express.static(path.join(__dirname, process.env.UPLOAD_DIR || 'uploads')));
 
 // Rate limiting
 const generalLimiter = rateLimit({
@@ -348,7 +351,7 @@ const createCrud = (table, fields, excludeMethods = []) => {
 };
 
 // Login Endpoint - JWT based authentication with rate limiting
-app.post('/api/auth/login', authLimiter, async (req, res) => {
+app.post(`${BASE_PATH}/api/auth/login`, authLimiter, async (req, res) => {
     const { password } = req.body;
 
     // Validate password is provided
@@ -385,9 +388,9 @@ app.post('/api/auth/login', authLimiter, async (req, res) => {
 });
 
 // --- Routes ---
-app.use('/api/blog_posts', createCrud('blog_posts', ['id', 'title', 'category', 'date', 'summary', 'image', 'content']));
-app.use('/api/jobs', createCrud('jobs', ['id', 'title', 'type', 'location', 'time', 'exp', 'department']));
-app.use('/api/projects', createCrud('projects', ['id', 'title', 'category', 'description', 'image']));
+app.use(`${BASE_PATH}/api/blog_posts`, createCrud('blog_posts', ['id', 'title', 'category', 'date', 'summary', 'image', 'content']));
+app.use(`${BASE_PATH}/api/jobs`, createCrud('jobs', ['id', 'title', 'type', 'location', 'time', 'exp', 'department']));
+app.use(`${BASE_PATH}/api/projects`, createCrud('projects', ['id', 'title', 'category', 'description', 'image']));
 
 // Pages Route
 const pagesRouter = createCrud('pages', ['id', 'slug', 'title', 'content', 'created_at']);
@@ -402,9 +405,9 @@ pagesRouter.get('/slug/:slug', async (req, res) => {
         res.status(500).json({ error: "Failed to fetch page" });
     }
 });
-app.use('/api/pages', pagesRouter);
+app.use(`${BASE_PATH}/api/pages`, pagesRouter);
 
-app.use('/api/messages', createCrud('messages', ['id', 'name', 'surname', 'email', 'phone', 'message', 'date']));
+app.use(`${BASE_PATH}/api/messages`, createCrud('messages', ['id', 'name', 'surname', 'email', 'phone', 'message', 'date']));
 
 // --- Settings Route ---
 const settingsRouter = express.Router();
@@ -488,17 +491,17 @@ settingsRouter.delete('/:ckey', authenticate, async (req, res) => {
         res.status(500).json({ error: "Failed to delete setting" });
     }
 });
-app.use('/api/settings', settingsRouter);
+app.use(`${BASE_PATH}/api/settings`, settingsRouter);
 
-app.use('/api/menu_items', createCrud('menu_items', ['id', 'label', 'url', 'order_index']));
-app.use('/api/home_features', createCrud('home_features', ['id', 'title', 'description', 'icon', 'order_index']));
-app.use('/api/home_services', createCrud('home_services', ['id', 'title', 'description', 'icon', 'link', 'order_index']));
-app.use('/api/infrastructure_features', createCrud('infrastructure_features', ['id', 'title', 'description', 'icon', 'points', 'order_index']));
-app.use('/api/tech_partners', createCrud('tech_partners', ['id', 'name', 'icon', 'order_index']));
-app.use('/api/testimonials', createCrud('testimonials', ['id', 'name', 'title', 'quote', 'image', 'order_index']));
-app.use('/api/career_values', createCrud('career_values', ['id', 'title', 'description', 'icon', 'order_index']));
-app.use('/api/career_tech_stack', createCrud('career_tech_stack', ['id', 'name', 'icon', 'order_index']));
-app.use('/api/legal_sections', createCrud('legal_sections', ['id', 'title', 'content', 'anchor', 'order_index']));
+app.use(`${BASE_PATH}/api/menu_items`, createCrud('menu_items', ['id', 'label', 'url', 'order_index']));
+app.use(`${BASE_PATH}/api/home_features`, createCrud('home_features', ['id', 'title', 'description', 'icon', 'order_index']));
+app.use(`${BASE_PATH}/api/home_services`, createCrud('home_services', ['id', 'title', 'description', 'icon', 'link', 'order_index']));
+app.use(`${BASE_PATH}/api/infrastructure_features`, createCrud('infrastructure_features', ['id', 'title', 'description', 'icon', 'points', 'order_index']));
+app.use(`${BASE_PATH}/api/tech_partners`, createCrud('tech_partners', ['id', 'name', 'icon', 'order_index']));
+app.use(`${BASE_PATH}/api/testimonials`, createCrud('testimonials', ['id', 'name', 'title', 'quote', 'image', 'order_index']));
+app.use(`${BASE_PATH}/api/career_values`, createCrud('career_values', ['id', 'title', 'description', 'icon', 'order_index']));
+app.use(`${BASE_PATH}/api/career_tech_stack`, createCrud('career_tech_stack', ['id', 'name', 'icon', 'order_index']));
+app.use(`${BASE_PATH}/api/legal_sections`, createCrud('legal_sections', ['id', 'title', 'content', 'anchor', 'order_index']));
 
 // --- File Upload ---
 const fs = require('fs');
@@ -541,7 +544,7 @@ const upload = multer({
     }
 });
 
-app.post('/api/upload', uploadLimiter, authenticate, upload.single('file'), async (req, res) => {
+app.post(`${BASE_PATH}/api/upload`, uploadLimiter, authenticate, upload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
     try {
@@ -589,7 +592,7 @@ app.post('/api/upload', uploadLimiter, authenticate, upload.single('file'), asyn
             });
         }
 
-        const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+        const fileUrl = `${req.protocol}://${req.get('host')}${BASE_PATH}/uploads/${req.file.filename}`;
         res.json({ url: fileUrl });
     } catch (error) {
         // Clean up file on error
@@ -607,7 +610,7 @@ app.post('/api/upload', uploadLimiter, authenticate, upload.single('file'), asyn
 });
 
 // --- SEO Routes ---
-app.get('/sitemap.xml', async (req, res) => {
+app.get(`${BASE_PATH}/sitemap.xml`, async (req, res) => {
     try {
         const settings = await req.db.all("SELECT ckey, value FROM site_settings");
         const getSetting = (key, def) => {
@@ -650,7 +653,7 @@ app.get('/sitemap.xml', async (req, res) => {
     }
 });
 
-app.get('/robots.txt', async (req, res) => {
+app.get(`${BASE_PATH}/robots.txt`, async (req, res) => {
     try {
         const row = await req.db.get("SELECT value FROM site_settings WHERE ckey = 'site_url'");
         let baseUrl = row ? row.value : 'https://www.ionet.com.tr';
@@ -666,21 +669,23 @@ app.get('/robots.txt', async (req, res) => {
 const distPath = path.join(__dirname, '../dist');
 
 if (fs.existsSync(distPath)) {
-    console.log(`Serving static files from: ${distPath}`);
+    console.log(`Serving static files from: ${distPath}, Base Path: ${BASE_PATH}`);
 
-    // 1. Serve static assets under /ionet-web
-    app.use('/ionet-web', express.static(distPath));
+    // 1. Serve static assets under BASE_PATH
+    app.use(BASE_PATH, express.static(distPath));
 
-    // 2. Redirect root / to /ionet-web/
-    app.get('/', (req, res) => res.redirect('/ionet-web/'));
+    // 2. Redirect root / to BASE_PATH/
+    app.get('/', (req, res) => res.redirect(`${BASE_PATH}/`));
 
-    // 3. Handle /ionet-web (missing slash)
-    app.get('/ionet-web', (req, res) => res.redirect('/ionet-web/'));
+    // 3. Handle base path without slash (if necessary, though app.use above might handle it, explicitly redirecting is safer)
+    if (BASE_PATH !== '/') {
+        app.get(BASE_PATH, (req, res) => res.redirect(`${BASE_PATH}/`));
+    }
 
-    // 4. SPA Catch-all for /ionet-web/*
-    app.get('/ionet-web/*', (req, res) => {
+    // 4. SPA Catch-all for BASE_PATH/*
+    app.get(`${BASE_PATH}/*`, (req, res) => {
         // Do not return HTML for API requests
-        if (req.originalUrl.includes('/api/') || req.path.startsWith('/api/')) {
+        if (req.originalUrl.includes(`${BASE_PATH}/api/`) || req.path.startsWith(`${BASE_PATH}/api/`)) {
             return res.status(404).json({ error: 'Not Found' });
         }
         res.sendFile(path.join(distPath, 'index.html'));

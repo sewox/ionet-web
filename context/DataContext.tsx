@@ -207,24 +207,27 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [careerTechStack, setCareerTechStack] = useState<CareerTech[]>([]);
   const [legalSections, setLegalSections] = useState<LegalSection[]>([]);
 
+  // Dynamic API Base Path
+  const API_BASE = ((import.meta as any).env.VITE_BASE_PATH || '/ionet-web').replace(/\/$/, '');
+
   const fetchData = async () => {
     try {
       const [postsRes, jobsRes, projRes, pagesRes, msgRes, settingsRes, menuRes, featureRes, serviceRes, infraRes, partnerRes, testimonialsRes, cValuesRes, cTechRes, legalRes] = await Promise.all([
-        fetch('/api/blog_posts').then(r => r.json()),
-        fetch('/api/jobs').then(r => r.json()),
-        fetch('/api/projects').then(r => r.json()),
-        fetch('/api/pages').then(r => r.json()),
-        fetch('/api/messages').then(r => r.json()),
-        fetch('/api/settings').then(r => r.json()),
-        fetch('/api/menu_items').then(r => r.json()),
-        fetch('/api/home_features').then(r => r.json()),
-        fetch('/api/home_services').then(r => r.json()),
-        fetch('/api/infrastructure_features').then(r => r.json()),
-        fetch('/api/tech_partners').then(r => r.json()),
-        fetch('/api/testimonials').then(r => r.json()),
-        fetch('/api/career_values').then(r => r.json()),
-        fetch('/api/career_tech_stack').then(r => r.json()),
-        fetch('/api/legal_sections').then(r => r.json())
+        fetch(`${API_BASE}/api/blog_posts`).then(r => r.json()),
+        fetch(`${API_BASE}/api/jobs`).then(r => r.json()),
+        fetch(`${API_BASE}/api/projects`).then(r => r.json()),
+        fetch(`${API_BASE}/api/pages`).then(r => r.json()),
+        fetch(`${API_BASE}/api/messages`).then(r => r.json()),
+        fetch(`${API_BASE}/api/settings`).then(r => r.json()),
+        fetch(`${API_BASE}/api/menu_items`).then(r => r.json()),
+        fetch(`${API_BASE}/api/home_features`).then(r => r.json()),
+        fetch(`${API_BASE}/api/home_services`).then(r => r.json()),
+        fetch(`${API_BASE}/api/infrastructure_features`).then(r => r.json()),
+        fetch(`${API_BASE}/api/tech_partners`).then(r => r.json()),
+        fetch(`${API_BASE}/api/testimonials`).then(r => r.json()),
+        fetch(`${API_BASE}/api/career_values`).then(r => r.json()),
+        fetch(`${API_BASE}/api/career_tech_stack`).then(r => r.json()),
+        fetch(`${API_BASE}/api/legal_sections`).then(r => r.json())
       ]);
       setBlogPosts(postsRes || []);
       setJobs(jobsRes || []);
@@ -260,6 +263,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const postData = async (url: string, data: any) => {
+    // If URL is absolute/relative starting with /, prepend API_BASE if not already present?
+    // Actually, callers pass full path '/api/...'
+    // So we invoke callers with correct path OR we check here.
+    // Callers are below. we will update callers.
     const res = await fetch(url, {
       method: 'POST',
       headers: getHeaders(),
@@ -292,65 +299,65 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   // Actions
-  const addBlogPost = async (post: BlogPost) => postData('/api/blog_posts', post);
-  const updateBlogPost = async (post: BlogPost) => updateData('/api/blog_posts', post);
-  const deleteBlogPost = async (id: string) => deleteData(`/api/blog_posts/${id}`);
+  const addBlogPost = async (post: BlogPost) => postData(`${API_BASE}/api/blog_posts`, post);
+  const updateBlogPost = async (post: BlogPost) => updateData(`${API_BASE}/api/blog_posts`, post);
+  const deleteBlogPost = async (id: string) => deleteData(`${API_BASE}/api/blog_posts/${id}`);
 
-  const addJob = async (job: Job) => postData('/api/jobs', job);
-  const updateJob = async (job: Job) => updateData('/api/jobs', job);
-  const deleteJob = async (id: string) => deleteData(`/api/jobs/${id}`);
+  const addJob = async (job: Job) => postData(`${API_BASE}/api/jobs`, job);
+  const updateJob = async (job: Job) => updateData(`${API_BASE}/api/jobs`, job);
+  const deleteJob = async (id: string) => deleteData(`${API_BASE}/api/jobs/${id}`);
 
-  const addProject = async (project: Project) => postData('/api/projects', project);
-  const updateProject = async (project: Project) => updateData('/api/projects', project);
-  const deleteProject = async (id: string) => deleteData(`/api/projects/${id}`);
+  const addProject = async (project: Project) => postData(`${API_BASE}/api/projects`, project);
+  const updateProject = async (project: Project) => updateData(`${API_BASE}/api/projects`, project);
+  const deleteProject = async (id: string) => deleteData(`${API_BASE}/api/projects/${id}`);
 
-  const addPage = async (page: Page) => postData('/api/pages', page);
-  const updatePage = async (page: Page) => updateData('/api/pages', page);
-  const deletePage = async (id: string) => deleteData(`/api/pages/${id}`);
+  const addPage = async (page: Page) => postData(`${API_BASE}/api/pages`, page);
+  const updatePage = async (page: Page) => updateData(`${API_BASE}/api/pages`, page);
+  const deletePage = async (id: string) => deleteData(`${API_BASE}/api/pages/${id}`);
 
-  const sendMessage = async (msg: Message) => postData('/api/messages', msg);
-  const deleteMessage = async (id: string) => deleteData(`/api/messages/${id}`);
+  const sendMessage = async (msg: Message) => postData(`${API_BASE}/api/messages`, msg);
+  const deleteMessage = async (id: string) => deleteData(`${API_BASE}/api/messages/${id}`);
 
   const updateSetting = async (ckey: string, value: string, group_name: string = 'general', type: 'text' | 'long_text' | 'image' = 'text') => {
-    await postData('/api/settings', { ckey, value, group_name, type });
+    await postData(`${API_BASE}/api/settings`, { ckey, value, group_name, type });
   };
-  const deleteSetting = async (ckey: string) => deleteData(`/api/settings/${ckey}`);
+  const deleteSetting = async (ckey: string) => deleteData(`${API_BASE}/api/settings/${ckey}`);
 
-  const addMenuItem = async (item: MenuItem) => postData('/api/menu_items', item);
-  const updateMenuItem = async (item: MenuItem) => updateData('/api/menu_items', item);
-  const deleteMenuItem = async (id: string) => deleteData(`/api/menu_items/${id}`);
+  const addMenuItem = async (item: MenuItem) => postData(`${API_BASE}/api/menu_items`, item);
+  const updateMenuItem = async (item: MenuItem) => updateData(`${API_BASE}/api/menu_items`, item);
+  const deleteMenuItem = async (id: string) => deleteData(`${API_BASE}/api/menu_items/${id}`);
 
-  const addFeature = async (feature: Feature) => postData('/api/home_features', feature);
-  const updateFeature = async (feature: Feature) => updateData('/api/home_features', feature);
-  const deleteFeature = async (id: string) => deleteData(`/api/home_features/${id}`);
+  const addFeature = async (feature: Feature) => postData(`${API_BASE}/api/home_features`, feature);
+  const updateFeature = async (feature: Feature) => updateData(`${API_BASE}/api/home_features`, feature);
+  const deleteFeature = async (id: string) => deleteData(`${API_BASE}/api/home_features/${id}`);
 
-  const addService = async (service: ServiceItem) => postData('/api/home_services', service);
-  const updateService = async (service: ServiceItem) => updateData('/api/home_services', service);
-  const deleteService = async (id: string) => deleteData(`/api/home_services/${id}`);
+  const addService = async (service: ServiceItem) => postData(`${API_BASE}/api/home_services`, service);
+  const updateService = async (service: ServiceItem) => updateData(`${API_BASE}/api/home_services`, service);
+  const deleteService = async (id: string) => deleteData(`${API_BASE}/api/home_services/${id}`);
 
-  const addInfraFeature = async (feature: InfraFeature) => postData('/api/infrastructure_features', feature);
-  const updateInfraFeature = async (feature: InfraFeature) => updateData('/api/infrastructure_features', feature);
-  const deleteInfraFeature = async (id: string) => deleteData(`/api/infrastructure_features/${id}`);
+  const addInfraFeature = async (feature: InfraFeature) => postData(`${API_BASE}/api/infrastructure_features`, feature);
+  const updateInfraFeature = async (feature: InfraFeature) => updateData(`${API_BASE}/api/infrastructure_features`, feature);
+  const deleteInfraFeature = async (id: string) => deleteData(`${API_BASE}/api/infrastructure_features/${id}`);
 
-  const addTechPartner = async (partner: TechPartner) => postData('/api/tech_partners', partner);
-  const updateTechPartner = async (partner: TechPartner) => updateData('/api/tech_partners', partner);
-  const deleteTechPartner = async (id: string) => deleteData(`/api/tech_partners/${id}`);
+  const addTechPartner = async (partner: TechPartner) => postData(`${API_BASE}/api/tech_partners`, partner);
+  const updateTechPartner = async (partner: TechPartner) => updateData(`${API_BASE}/api/tech_partners`, partner);
+  const deleteTechPartner = async (id: string) => deleteData(`${API_BASE}/api/tech_partners/${id}`);
 
-  const addTestimonial = async (testimonial: Testimonial) => postData('/api/testimonials', testimonial);
-  const updateTestimonial = async (testimonial: Testimonial) => updateData('/api/testimonials', testimonial);
-  const deleteTestimonial = async (id: string) => deleteData(`/api/testimonials/${id}`);
+  const addTestimonial = async (testimonial: Testimonial) => postData(`${API_BASE}/api/testimonials`, testimonial);
+  const updateTestimonial = async (testimonial: Testimonial) => updateData(`${API_BASE}/api/testimonials`, testimonial);
+  const deleteTestimonial = async (id: string) => deleteData(`${API_BASE}/api/testimonials/${id}`);
 
-  const addCareerValue = async (val: CareerValue) => postData('/api/career_values', val);
-  const updateCareerValue = async (val: CareerValue) => updateData('/api/career_values', val);
-  const deleteCareerValue = async (id: string) => deleteData(`/api/career_values/${id}`);
+  const addCareerValue = async (val: CareerValue) => postData(`${API_BASE}/api/career_values`, val);
+  const updateCareerValue = async (val: CareerValue) => updateData(`${API_BASE}/api/career_values`, val);
+  const deleteCareerValue = async (id: string) => deleteData(`${API_BASE}/api/career_values/${id}`);
 
-  const addCareerTech = async (tech: CareerTech) => postData('/api/career_tech_stack', tech);
-  const updateCareerTech = async (tech: CareerTech) => updateData('/api/career_tech_stack', tech);
-  const deleteCareerTech = async (id: string) => deleteData(`/api/career_tech_stack/${id}`);
+  const addCareerTech = async (tech: CareerTech) => postData(`${API_BASE}/api/career_tech_stack`, tech);
+  const updateCareerTech = async (tech: CareerTech) => updateData(`${API_BASE}/api/career_tech_stack`, tech);
+  const deleteCareerTech = async (id: string) => deleteData(`${API_BASE}/api/career_tech_stack/${id}`);
 
-  const addLegalSection = async (sec: LegalSection) => postData('/api/legal_sections', sec);
-  const updateLegalSection = async (sec: LegalSection) => updateData('/api/legal_sections', sec);
-  const deleteLegalSection = async (id: string) => deleteData(`/api/legal_sections/${id}`);
+  const addLegalSection = async (sec: LegalSection) => postData(`${API_BASE}/api/legal_sections`, sec);
+  const updateLegalSection = async (sec: LegalSection) => updateData(`${API_BASE}/api/legal_sections`, sec);
+  const deleteLegalSection = async (id: string) => deleteData(`${API_BASE}/api/legal_sections/${id}`);
 
   return (
     <DataContext.Provider value={{

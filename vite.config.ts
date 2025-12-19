@@ -24,6 +24,6 @@ export default defineConfig(({ mode }) => {
         '@': path.resolve(__dirname, '.'),
       }
     },
-    base: '/ionet-web/',
+    base: env.VITE_BASE_PATH || '/ionet-web/',
   };
 });
