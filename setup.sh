@@ -164,7 +164,7 @@ if command -v apache2ctl &> /dev/null; then
         echo -e "${GREEN}==========================================${NC}"
         echo -e "${GREEN}    KURULUM BAŞARIYLA TAMAMLANDI!${NC}"
         echo -e "${GREEN}==========================================${NC}"
-        echo -e "Erişim Adresi: http://SUNUCU_IP$URL_PATH"
+        echo -e "Erişim Adresi: http://192.168.34.22/$URL_PATH"
     else
         echo -e "${RED}Apache config hatası! Yedeği geri yükleyin.${NC}"
     fi

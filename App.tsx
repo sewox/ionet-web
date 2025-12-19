@@ -31,7 +31,7 @@ const PageLoader = () => (
 
 const Header: React.FC = () => {
   const location = useLocation();
-  const isAdmin = location.pathname.startsWith('/admin') || location.pathname === '/login';
+  const isAdmin = location.pathname.startsWith('/ionet-web/admin') || location.pathname === '/ionet-web/login';
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { siteSettings, menuItems } = useData() as any; // Using any to bypass strict context type check for now
 
@@ -156,7 +156,7 @@ const Header: React.FC = () => {
 const Footer: React.FC = () => {
   const location = useLocation();
   const { getContent } = useContent();
-  if (location.pathname.startsWith('/admin')) return null;
+  if (location.pathname.startsWith('/ionet-web/admin')) return null;
 
   return (
     <footer className="bg-secondary text-white pt-16 pb-8 border-t border-gray-800">
@@ -267,7 +267,7 @@ const Footer: React.FC = () => {
 const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
   const { isAuthenticated } = useAuth();
   if (!isAuthenticated) {
-    return <Navigate to="/admin/login" replace />;
+    return <Navigate to="/ionet-web/admin/login" replace />;
   }
   return children;
 };
@@ -283,22 +283,22 @@ const App: React.FC = () => {
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   {/* Public Routes */}
-                  <Route path="/" element={<Home />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="/infrastructure" element={<Infrastructure />} />
-                  <Route path="/references" element={<References />} />
-                  <Route path="/pricing" element={<Pricing />} />
-                  <Route path="/careers" element={<Careers />} />
-                  <Route path="/blog" element={<Blog />} />
-                  <Route path="/article/:id" element={<BlogPost />} />
-                  <Route path="/legal" element={<Legal />} />
+                  <Route path="/ionet-web" element={<Home />} />
+                  <Route path="/ionet-web/contact" element={<Contact />} />
+                  <Route path="/ionet-web/infrastructure" element={<Infrastructure />} />
+                  <Route path="/ionet-web/references" element={<References />} />
+                  <Route path="/ionet-web/pricing" element={<Pricing />} />
+                  <Route path="/ionet-web/careers" element={<Careers />} />
+                  <Route path="/ionet-web/blog" element={<Blog />} />
+                  <Route path="/ionet-web/article/:id" element={<BlogPost />} />
+                  <Route path="/ionet-web/legal" element={<Legal />} />
 
                   {/* Admin Routes */}
                   {/* Redirect /admin to /admin/dashboard */}
-                  <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-                  <Route path="/admin/login" element={<AdminLogin />} />
+                  <Route path="/ionet-web/admin" element={<Navigate to="/ionet-web/admin/dashboard" replace />} />
+                  <Route path="/ionet-web/admin/login" element={<AdminLogin />} />
                   <Route
-                    path="/admin/dashboard"
+                    path="/ionet-web/admin/dashboard"
                     element={
                       <ProtectedRoute>
                         <AdminDashboard />
