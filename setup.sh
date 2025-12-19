@@ -166,35 +166,7 @@ if [ -f "$TARGET_CONF" ]; then
     SAFE_URL_PATH=$(echo $URL_PATH | sed 's/\//\\\//g')
     
     # Check if config exists
-    if grep -q "ProxyPass $URL_PATH" "$TARGET_CONF"; then
-        echo -e "${YELLOW}      > Ayarlar zaten dosyada mevcut.${NC}"
-    else
-        echo -e "      > Yeni Reverse Proxy ayarları ekleniyor..."
-        
-        echo -e "      > Yeni Reverse Proxy ayarları ekleniyor..."
-        
-        # Use safe line-by-line insertion to avoid sed multiline/delimiter issues
-        # Using | as delimiter since URL path contains /
-        
-        # Insert from bottom up (since 'i' inserts before the match) OR just do one by one in order 
-        # But 'i' inserts before current line. If we do:
-        # 1. Insert START
-        # 2. Insert Location (it will be inserted before </VirtualHost>, so AFTER START? No. 
-        # sed -i '/match/i A' -> A \n match
-        # sed -i '/match/i B' -> A \n B \n match
-        # So sequential execution works naturally to build the block order.
-
-        sed -i "\|</VirtualHost>|i # --- IONET WEB START ---" "$TARGET_CONF"
-        sed -i "\|</VirtualHost>|i <Location $URL_PATH>" "$TARGET_CONF"
-        sed -i "\|</VirtualHost>|i \    ProxyPreserveHost On" "$TARGET_CONF"
-        sed -i "\|</VirtualHost>|i \    ProxyPass http://localhost:$BACKEND_PORT$URL_PATH" "$TARGET_CONF"
-        sed -i "\|</VirtualHost>|i \    ProxyPassReverse http://localhost:$BACKEND_PORT$URL_PATH" "$TARGET_CONF"
-        sed -i "\|</VirtualHost>|i </Location>" "$TARGET_CONF"
-        sed -i "\|</VirtualHost>|i # --- IONET WEB END ---" "$TARGET_CONF"
-    fi
-else
-    echo -e "${RED}Hata: Apache config dosyası bulunamadı ($TARGET_CONF). Apache kurulu mu?${NC}"
-fi
+    
 
 # ==========================================
 # 5. BİTİŞ
