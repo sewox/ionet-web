@@ -131,7 +131,7 @@ VITE_BASE_PATH=$URL_PATH
 UPLOAD_DIR=server/uploads/
 JWT_SECRET=$JWT_SECRET
 ADMIN_PASSWORD_HASH=$ADMIN_HASH
-ALLOWED_ORIGINS=http://localhost:$BACKEND_PORT,http://localhost:5173,http://YOUR_SERVER_IP
+ALLOWED_ORIGINS=http://localhost:$BACKEND_PORT,http://localhost:5173,http://192.168.34.22
 # Mail Ayarları (Opsiyonel)
 MAIL_TO=admin@example.com
 SMTP_HOST=smtp.example.com
@@ -154,40 +154,7 @@ fi
 npx pm2 save --force
 
 # ==========================================
-# 4. APACHE YAPILANDIRMASI
-# ==========================================
-echo -e "${BLUE}[3/4] Apache VirtualHost Ayarlanıyor...${NC}"
-TARGET_CONF="/etc/apache2/sites-available/000-default.conf"
-
-if [ -f "$TARGET_CONF" ]; then
-    echo -e "      > Config dosyası yedekleniyor..."
-    cp "$TARGET_CONF" "$TARGET_CONF.bak_$(date +%F_%H%M)"
-    # Remove any existing IONET block or Alias directives that might conflict
-    sed -i '/# --- IONET WEB START ---/,/# --- IONET WEB END ---/d' "$TARGET_CONF"
-    sed -i '/Alias \/ionet-web/d' "$TARGET_CONF"
-    sed -i '/<Directory "\/var\/www\/ionet-web\/dist">/,/<\/Directory>/d' "$TARGET_CONF"
-
-    # Construct the ProxyPass block
-    CAT_DOC=$(cat <<EOF
-    # --- IONET WEB START ---
-    <Location $URL_PATH>
-        ProxyPreserveHost On
-        ProxyPass http://localhost:$BACKEND_PORT$URL_PATH
-        ProxyPassReverse http://localhost:$BACKEND_PORT$URL_PATH
-    </Location>
-    # --- IONET WEB END ---
-EOF
-)
-    # Escape newlines for sed insertion
-    ESCAPED_DOC=$(echo "$CAT_DOC" | sed ':a;N;$!ba;s/\n/\\n    /g')
-    
-    # Insert before closing VirtualHost
-    sed -i "\|</VirtualHost>|i \\    $ESCAPED_DOC" "$TARGET_CONF"
-    
-    echo -e "      > Apache konfigürasyonu güncellendi: $URL_PATH -> :$BACKEND_PORT$URL_PATH"
-fi
-# ==========================================
-# 5. BİTİŞ
+# 4. BİTİŞ
 # ==========================================
 echo -e "${BLUE}[4/4] Servisler Yeniden Başlatılıyor...${NC}"
 
