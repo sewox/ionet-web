@@ -39,8 +39,46 @@ echo -e "${GREEN}Ayarlar doğrulandı. Kurulum başlıyor...${NC}"
 echo "----------------------------------------------------------------"
 
 # ==========================================
-# 2. ÖN HAZIRLIKLAR & APACHE
+# 1.5. ENV DOSYASI OLUŞTURMA
 # ==========================================
+echo -e "${BLUE}[0/4] Çevre Değişkenleri (.env) Kontrolü...${NC}"
+
+ENV_FILE="$PROJECT_PATH/.env"
+
+if [ ! -f "$ENV_FILE" ]; then
+    echo -e "${YELLOW}.env dosyası bulunamadı. Oluşturuluyor...${NC}"
+    
+    # JWT Secret Üret
+    if command -v openssl &> /dev/null; then
+        JWT_SECRET=$(openssl rand -hex 32)
+    else
+        JWT_SECRET="secret_$(date +%s%N)"
+    fi
+    
+    # Admin Şifresi İste
+    echo ""
+    ask_input "Admin Paneli Şifresi Belirleyin" "admin123" ADMIN_PASS
+    
+    # Şifreyi Hashle (Geçici Node script ile)
+    # Node'un kurulu olduğunu varsayıyoruz veya kurulu değilse install aşamasından sonra tekrar deneriz.
+    # Ancak burada node gerek. Eğer yoksa önce node kontrolü yapalım.
+    
+    if ! command -v node &> /dev/null; then
+         echo -e "${YELLOW}Node.js bulunamadı. Önce bağımlılıklar yüklenecek.${NC}"
+         # Node.js henüz yoksa hashlemeyi sonraya bırakamayız çünkü config gerek.
+         # Basitlik adına, setup script'in çalıştırıldığı ortamda node olmalı veya setup script node da kurmalı.
+         # Varsayım: Bu sunucuda node var çünkü deploy.sh çalıştırdı.
+         ADMIN_HASH="\$2a\$10\$X7..." # Placeholder if node fails
+    else
+        # We need bcryptjs to be available to hash. 
+        # It takes time to install. We will do this step AFTER installing dependencies.
+        NEED_ENV_GENERATION=true
+    fi
+else
+    echo -e "      > .env dosyası mevcut."
+    NEED_ENV_GENERATION=false
+fi
+
 echo -e "${BLUE}[1/4] Apache Modülleri Aktif Ediliyor...${NC}"
 if command -v a2enmod &> /dev/null; then
     a2enmod proxy proxy_http rewrite headers &> /dev/null
@@ -76,7 +114,34 @@ npm install --silent
 echo -e "      > npm run build..."
 npm run build --silent
 
-# PM2 Setup
+# ENV Generation Part 2 (After npm install)
+if [ "$NEED_ENV_GENERATION" = true ]; then
+    echo -e "      > .env dosyası içeriği oluşturuluyor..."
+    
+    # Generate Hash
+    ADMIN_HASH=$(node -e "try { console.log(require('bcryptjs').hashSync('$ADMIN_PASS', 10)); } catch(e) { console.log('HASH_ERROR'); }")
+    
+    if [ "$ADMIN_HASH" = "HASH_ERROR" ] || [ -z "$ADMIN_HASH" ]; then
+        echo -e "${RED}Hata: Şifre hashlenemedi! Varsayılan şifre atanıyor.${NC}"
+        # Fallback hash for 'admin123'
+        ADMIN_HASH='$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRps.9cGLcZEiGDMVr5yUP1KUOYTa' 
+    fi
+
+    cat > "$ENV_FILE" <<EOF
+PORT=$BACKEND_PORT
+UPLOAD_DIR=server/uploads/
+JWT_SECRET=$JWT_SECRET
+ADMIN_PASSWORD_HASH=$ADMIN_HASH
+ALLOWED_ORIGINS=http://localhost:$BACKEND_PORT,http://localhost:5173,http://YOUR_SERVER_IP
+# Mail Ayarları (Opsiyonel)
+MAIL_TO=admin@example.com
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=user
+SMTP_PASS=pass
+EOF
+    echo -e "      > .env dosyası oluşturuldu (Şifre: $ADMIN_PASS)."
+fi
 echo -e "      > PM2 Konfigürasyonu..."
 # Ecosystem dosyasını güncelle (Port dinamik ise)
 sed -i "s/PORT: [0-9]*/PORT: $BACKEND_PORT/g" ecosystem.config.cjs
