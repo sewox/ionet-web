@@ -1,22 +1,33 @@
-import React, { useState } from 'react';
-import { HashRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
+import React, { useState, Suspense } from 'react';
+import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { DataProvider, useData } from './context/DataContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { useContent } from './hooks/useContent';
 
-import Home from './pages/Home';
-import Contact from './pages/Contact';
-import Infrastructure from './pages/Infrastructure';
-import References from './pages/References';
-import Pricing from './pages/Pricing';
-import Careers from './pages/Careers';
-import Blog from './pages/Blog';
-import BlogPost from './pages/BlogPost';
-import Legal from './pages/Legal';
-import NotFound from './pages/NotFound';
-import AdminLogin from './pages/admin/AdminLogin';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import DynamicPage from './pages/DynamicPage';
+// Lazy Load Pages
+const Home = React.lazy(() => import('./pages/Home'));
+const Contact = React.lazy(() => import('./pages/Contact'));
+const Infrastructure = React.lazy(() => import('./pages/Infrastructure'));
+const References = React.lazy(() => import('./pages/References'));
+const Pricing = React.lazy(() => import('./pages/Pricing'));
+const Careers = React.lazy(() => import('./pages/Careers'));
+const Blog = React.lazy(() => import('./pages/Blog'));
+const BlogPost = React.lazy(() => import('./pages/BlogPost'));
+const Legal = React.lazy(() => import('./pages/Legal'));
+const NotFound = React.lazy(() => import('./pages/NotFound'));
+const AdminLogin = React.lazy(() => import('./pages/admin/AdminLogin'));
+const AdminDashboard = React.lazy(() => import('./pages/admin/AdminDashboard'));
+const DynamicPage = React.lazy(() => import('./pages/DynamicPage'));
+
+// Generic Loading Component
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="flex flex-col items-center gap-4">
+      <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+      <p className="text-gray-500 font-medium animate-pulse">Yükleniyor...</p>
+    </div>
+  </div>
+);
 
 const Header: React.FC = () => {
   const location = useLocation();
@@ -111,14 +122,14 @@ const Header: React.FC = () => {
       {isMenuOpen && (
         <div className="md:hidden bg-white border-t border-gray-100">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            {navLinks.map((link) => (
+            {navLinks.map((link: any) => (
               <Link
-                key={link.name}
-                to={link.path}
+                key={link.id || link.label}
+                to={link.url}
                 onClick={() => setIsMenuOpen(false)}
                 className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50"
               >
-                {link.name}
+                {link.label}
               </Link>
             ))}
             <Link
@@ -193,10 +204,10 @@ const Footer: React.FC = () => {
               dangerouslySetInnerHTML={{
                 __html: getContent('footer_col2_content', `
                 <ul class="space-y-4">
-                  <li><a href="#/infrastructure" class="text-gray-300 hover:text-primary transition-colors">Altyapı Yönetimi</a></li>
-                  <li><a href="#/infrastructure" class="text-gray-300 hover:text-primary transition-colors">Siber Güvenlik</a></li>
-                  <li><a href="#/infrastructure" class="text-gray-300 hover:text-primary transition-colors">Bulut Çözümleri</a></li>
-                  <li><a href="#/infrastructure" class="text-gray-300 hover:text-primary transition-colors">Yazılım Geliştirme</a></li>
+                  <li><a href="/infrastructure" class="text-gray-300 hover:text-primary transition-colors">Altyapı Yönetimi</a></li>
+                  <li><a href="/infrastructure" class="text-gray-300 hover:text-primary transition-colors">Siber Güvenlik</a></li>
+                  <li><a href="/infrastructure" class="text-gray-300 hover:text-primary transition-colors">Bulut Çözümleri</a></li>
+                  <li><a href="/infrastructure" class="text-gray-300 hover:text-primary transition-colors">Yazılım Geliştirme</a></li>
                 </ul>
               `)
               }}
@@ -210,10 +221,10 @@ const Footer: React.FC = () => {
               dangerouslySetInnerHTML={{
                 __html: getContent('footer_col3_content', `
                 <ul class="space-y-4">
-                  <li><a href="#/" class="text-gray-300 hover:text-primary transition-colors">Hakkımızda</a></li>
-                  <li><a href="#/careers" class="text-gray-300 hover:text-primary transition-colors">Kariyer</a></li>
-                  <li><a href="#/references" class="text-gray-300 hover:text-primary transition-colors">Referanslar</a></li>
-                  <li><a href="#/contact" class="text-gray-300 hover:text-primary transition-colors">İletişim</a></li>
+                  <li><a href="/" class="text-gray-300 hover:text-primary transition-colors">Hakkımızda</a></li>
+                  <li><a href="/careers" class="text-gray-300 hover:text-primary transition-colors">Kariyer</a></li>
+                  <li><a href="/references" class="text-gray-300 hover:text-primary transition-colors">Referanslar</a></li>
+                  <li><a href="/contact" class="text-gray-300 hover:text-primary transition-colors">İletişim</a></li>
                 </ul>
               `)
               }}
@@ -265,44 +276,46 @@ const App: React.FC = () => {
   return (
     <AuthProvider>
       <DataProvider>
-        <HashRouter>
+        <BrowserRouter basename="/ionet-web">
           <div className="flex flex-col min-h-screen">
             <Header />
             <main className="flex-grow">
-              <Routes>
-                {/* Public Routes */}
-                <Route path="/" element={<Home />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/infrastructure" element={<Infrastructure />} />
-                <Route path="/references" element={<References />} />
-                <Route path="/pricing" element={<Pricing />} />
-                <Route path="/careers" element={<Careers />} />
-                <Route path="/blog" element={<Blog />} />
-                <Route path="/article/:id" element={<BlogPost />} />
-                <Route path="/legal" element={<Legal />} />
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/" element={<Home />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/infrastructure" element={<Infrastructure />} />
+                  <Route path="/references" element={<References />} />
+                  <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/careers" element={<Careers />} />
+                  <Route path="/blog" element={<Blog />} />
+                  <Route path="/article/:id" element={<BlogPost />} />
+                  <Route path="/legal" element={<Legal />} />
 
-                {/* Admin Routes */}
-                {/* Redirect /admin to /admin/dashboard */}
-                <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-                <Route path="/admin/login" element={<AdminLogin />} />
-                <Route
-                  path="/admin/dashboard"
-                  element={
-                    <ProtectedRoute>
-                      <AdminDashboard />
-                    </ProtectedRoute>
-                  }
-                />
+                  {/* Admin Routes */}
+                  {/* Redirect /admin to /admin/dashboard */}
+                  <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+                  <Route path="/admin/login" element={<AdminLogin />} />
+                  <Route
+                    path="/admin/dashboard"
+                    element={
+                      <ProtectedRoute>
+                        <AdminDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
 
-                {/* Dynamic Pages (CMS) - Must be last before 404 */}
-                <Route path="/:slug" element={<DynamicPage />} />
+                  {/* Dynamic Pages (CMS) - Must be last before 404 */}
+                  <Route path="/:slug" element={<DynamicPage />} />
 
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
             </main>
             <Footer />
           </div>
-        </HashRouter>
+        </BrowserRouter>
       </DataProvider>
     </AuthProvider>
   );
