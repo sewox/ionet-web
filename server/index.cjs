@@ -12,7 +12,18 @@ const validator = require('validator');
 const xss = require('xss');
 const rateLimit = require('express-rate-limit');
 const { fileTypeFromBuffer } = require('file-type');
-require('dotenv').config();
+const rateLimit = require('express-rate-limit');
+const { fileTypeFromBuffer } = require('file-type');
+
+// Robust .env loading
+const fs = require('fs');
+const path = require('path');
+const envPath = path.resolve(__dirname, '../.env');
+if (fs.existsSync(envPath)) {
+    require('dotenv').config({ path: envPath });
+} else {
+    require('dotenv').config(); // Fallback to default
+}
 
 // Validate required environment variables on startup
 const requiredEnvVars = ['JWT_SECRET', 'ADMIN_PASSWORD_HASH'];

@@ -162,13 +162,30 @@ TARGET_CONF="/etc/apache2/sites-available/000-default.conf"
 if [ -f "$TARGET_CONF" ]; then
     echo -e "      > Config dosyası yedekleniyor..."
     cp "$TARGET_CONF" "$TARGET_CONF.bak_$(date +%F_%H%M)"
-    
-    # URL_PATH slashes escape for sed
-    SAFE_URL_PATH=$(echo $URL_PATH | sed 's/\//\\\//g')
-    
-    # Check if config exists
-    
+    # Remove any existing IONET block or Alias directives that might conflict
+    sed -i '/# --- IONET WEB START ---/,/# --- IONET WEB END ---/d' "$TARGET_CONF"
+    sed -i '/Alias \/ionet-web/d' "$TARGET_CONF"
+    sed -i '/<Directory "\/var\/www\/ionet-web\/dist">/,/<\/Directory>/d' "$TARGET_CONF"
 
+    # Construct the ProxyPass block
+    CAT_DOC=$(cat <<EOF
+    # --- IONET WEB START ---
+    <Location $URL_PATH>
+        ProxyPreserveHost On
+        ProxyPass http://localhost:$BACKEND_PORT$URL_PATH
+        ProxyPassReverse http://localhost:$BACKEND_PORT$URL_PATH
+    </Location>
+    # --- IONET WEB END ---
+EOF
+)
+    # Escape newlines for sed insertion
+    ESCAPED_DOC=$(echo "$CAT_DOC" | sed ':a;N;$!ba;s/\n/\\n    /g')
+    
+    # Insert before closing VirtualHost
+    sed -i "\|</VirtualHost>|i \\    $ESCAPED_DOC" "$TARGET_CONF"
+    
+    echo -e "      > Apache konfigürasyonu güncellendi: $URL_PATH -> :$BACKEND_PORT$URL_PATH"
+fi
 # ==========================================
 # 5. BİTİŞ
 # ==========================================
