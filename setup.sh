@@ -45,9 +45,21 @@ echo -e "${BLUE}[0/4] Çevre Değişkenleri (.env) Kontrolü...${NC}"
 
 ENV_FILE="$PROJECT_PATH/.env"
 
-if [ ! -f "$ENV_FILE" ]; then
+# Check if file exists AND contains valid content
+if [ -f "$ENV_FILE" ]; then
+    if grep -q "JWT_SECRET=" "$ENV_FILE" && grep -q "ADMIN_PASSWORD_HASH=" "$ENV_FILE"; then
+         echo -e "      > .env dosyası ve gerekli anahtarlar mevcut."
+         NEED_ENV_GENERATION=false
+    else
+         echo -e "${YELLOW}      > .env dosyası var ama eksik. Yeniden oluşturuluyor...${NC}"
+         NEED_ENV_GENERATION=true
+    fi
+else
     echo -e "${YELLOW}.env dosyası bulunamadı. Oluşturuluyor...${NC}"
-    
+    NEED_ENV_GENERATION=true
+fi
+
+if [ "$NEED_ENV_GENERATION" = true ]; then
     # JWT Secret Üret
     if command -v openssl &> /dev/null; then
         JWT_SECRET=$(openssl rand -hex 32)
@@ -59,24 +71,10 @@ if [ ! -f "$ENV_FILE" ]; then
     echo ""
     ask_input "Admin Paneli Şifresi Belirleyin" "admin123" ADMIN_PASS
     
-    # Şifreyi Hashle (Geçici Node script ile)
-    # Node'un kurulu olduğunu varsayıyoruz veya kurulu değilse install aşamasından sonra tekrar deneriz.
-    # Ancak burada node gerek. Eğer yoksa önce node kontrolü yapalım.
-    
+    # Pre-check Node for hashing
     if ! command -v node &> /dev/null; then
-         echo -e "${YELLOW}Node.js bulunamadı. Önce bağımlılıklar yüklenecek.${NC}"
-         # Node.js henüz yoksa hashlemeyi sonraya bırakamayız çünkü config gerek.
-         # Basitlik adına, setup script'in çalıştırıldığı ortamda node olmalı veya setup script node da kurmalı.
-         # Varsayım: Bu sunucuda node var çünkü deploy.sh çalıştırdı.
-         ADMIN_HASH="\$2a\$10\$X7..." # Placeholder if node fails
-    else
-        # We need bcryptjs to be available to hash. 
-        # It takes time to install. We will do this step AFTER installing dependencies.
-        NEED_ENV_GENERATION=true
+         echo -e "${YELLOW}Node.js bulunamadı. Hashleme kurulum sonrasına erteleniyor.${NC}"
     fi
-else
-    echo -e "      > .env dosyası mevcut."
-    NEED_ENV_GENERATION=false
 fi
 
 echo -e "${BLUE}[1/4] Apache Modülleri Aktif Ediliyor...${NC}"
