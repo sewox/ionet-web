@@ -12,8 +12,7 @@ const validator = require('validator');
 const xss = require('xss');
 const rateLimit = require('express-rate-limit');
 const { fileTypeFromBuffer } = require('file-type');
-const rateLimit = require('express-rate-limit');
-const { fileTypeFromBuffer } = require('file-type');
+
 
 // Robust .env loading
 const fs = require('fs');
