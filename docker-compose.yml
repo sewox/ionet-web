@@ -8,6 +8,10 @@ services:
       args:
         # Set BUILD_ENV based on your deployment (stage or production)
         BUILD_ENV: ${BUILD_ENV:-production}
+        # Pass Vite environment variables to build
+        VITE_BASE_PATH: ${VITE_BASE_PATH:-/}
+        VITE_API_URL: ${VITE_API_URL}
+        VITE_APP_ENV: ${VITE_APP_ENV}
 
     container_name: ionet-web
     restart: unless-stopped

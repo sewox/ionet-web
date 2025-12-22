@@ -21,6 +21,16 @@ RUN npm install
 # Copy source files
 COPY . .
 
+# Accept Vite environment variables as build args
+ARG VITE_BASE_PATH=/
+ARG VITE_API_URL
+ARG VITE_APP_ENV
+
+# Set them as environment variables for the build process
+ENV VITE_BASE_PATH=${VITE_BASE_PATH}
+ENV VITE_API_URL=${VITE_API_URL}
+ENV VITE_APP_ENV=${VITE_APP_ENV}
+
 # Build frontend based on environment
 RUN if [ "$BUILD_ENV" = "stage" ]; then \
     npm run build:stage; \

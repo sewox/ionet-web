@@ -175,14 +175,26 @@ www.your-domain.com        →    <coolify-server-ip>
 
 ## 5. Build ve Deployment
 
-### 5.1. Build Environment Variable
+### 5.1. Build Environment Variables
 
-> [!IMPORTANT]
-> Coolify'da build yapmadan önce **BUILD_ENV** environment variable'ını ekleyin:
-> - Staging için: `BUILD_ENV=stage`  
-> - Production için: `BUILD_ENV=production`
->
-> Bu değişken Vite build'ini doğru yapılandıracaktır.
+> [!CRITICAL]
+> **ÇOK ÖNEMLİ**: Aşağıdaki environment variable'lar **build sürecinden ÖNCE** eklenmelidir!
+> 
+> Vite build sırasında bu değerleri kullanır. Eğer build'den sonra eklerseniz, frontend bu değerleri göremez!
+
+**Build için Gerekli Variables**:
+```bash
+# Build konfigürasyonu
+BUILD_ENV=stage  # veya production
+
+# Vite için (build sırasında gerekli)
+VITE_BASE_PATH=/
+VITE_API_URL=https://your-staging-domain.com
+VITE_APP_ENV=staging
+```
+
+> [!WARNING]
+> Bu değişkenleri ekledikten sonra **yeniden build** almanız gerekir. Sadece restart yeterli değildir!
 
 ### 5.2. İlk Deployment
 
