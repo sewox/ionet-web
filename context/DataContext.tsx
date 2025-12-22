@@ -211,39 +211,61 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const API_BASE = ((import.meta as any).env.VITE_BASE_PATH || '/ionet-web').replace(/\/$/, '');
 
   const fetchData = async () => {
+    const fetchWithLog = async (endpoint: string) => {
+      const url = `${API_BASE}${endpoint}`;
+      try {
+        const res = await fetch(url);
+        if (!res.ok) {
+          console.error(`[DataContext] Fetch failed for ${url}: ${res.status} ${res.statustext}`);
+          const text = await res.text();
+          console.error(`[DataContext] Response body for ${url}:`, text.substring(0, 500));
+          return [];
+        }
+        return await res.json();
+      } catch (error) {
+        console.error(`[DataContext] Network error for ${url}:`, error);
+        return [];
+      }
+    };
+
     try {
-      const [postsRes, jobsRes, projRes, pagesRes, msgRes, settingsRes, menuRes, featureRes, serviceRes, infraRes, partnerRes, testimonialsRes, cValuesRes, cTechRes, legalRes] = await Promise.all([
-        fetch(`${API_BASE}/api/blog_posts`).then(r => r.json()),
-        fetch(`${API_BASE}/api/jobs`).then(r => r.json()),
-        fetch(`${API_BASE}/api/projects`).then(r => r.json()),
-        fetch(`${API_BASE}/api/pages`).then(r => r.json()),
-        fetch(`${API_BASE}/api/messages`).then(r => r.json()),
-        fetch(`${API_BASE}/api/settings`).then(r => r.json()),
-        fetch(`${API_BASE}/api/menu_items`).then(r => r.json()),
-        fetch(`${API_BASE}/api/home_features`).then(r => r.json()),
-        fetch(`${API_BASE}/api/home_services`).then(r => r.json()),
-        fetch(`${API_BASE}/api/infrastructure_features`).then(r => r.json()),
-        fetch(`${API_BASE}/api/tech_partners`).then(r => r.json()),
-        fetch(`${API_BASE}/api/testimonials`).then(r => r.json()),
-        fetch(`${API_BASE}/api/career_values`).then(r => r.json()),
-        fetch(`${API_BASE}/api/career_tech_stack`).then(r => r.json()),
-        fetch(`${API_BASE}/api/legal_sections`).then(r => r.json())
+      const [
+        postsRes, jobsRes, projRes, pagesRes, msgRes, settingsRes, menuRes,
+        featureRes, serviceRes, infraRes, partnerRes, testimonialsRes,
+        cValuesRes, cTechRes, legalRes
+      ] = await Promise.all([
+        fetchWithLog('/api/blog_posts'),
+        fetchWithLog('/api/jobs'),
+        fetchWithLog('/api/projects'),
+        fetchWithLog('/api/pages'),
+        fetchWithLog('/api/messages'),
+        fetchWithLog('/api/settings'),
+        fetchWithLog('/api/menu_items'),
+        fetchWithLog('/api/home_features'),
+        fetchWithLog('/api/home_services'),
+        fetchWithLog('/api/infrastructure_features'),
+        fetchWithLog('/api/tech_partners'),
+        fetchWithLog('/api/testimonials'),
+        fetchWithLog('/api/career_values'),
+        fetchWithLog('/api/career_tech_stack'),
+        fetchWithLog('/api/legal_sections')
       ]);
-      setBlogPosts(postsRes || []);
-      setJobs(jobsRes || []);
-      setProjects(projRes || []);
-      setPages(pagesRes || []);
-      setMessages(msgRes || []);
-      setSiteSettings(settingsRes || []);
-      setMenuItems((menuRes || []).sort((a: MenuItem, b: MenuItem) => a.order_index - b.order_index));
-      setHomeFeatures((featureRes || []).sort((a: Feature, b: Feature) => a.order_index - b.order_index));
-      setHomeServices((serviceRes || []).sort((a: ServiceItem, b: ServiceItem) => a.order_index - b.order_index));
-      setInfraFeatures((infraRes || []).sort((a: InfraFeature, b: InfraFeature) => a.order_index - b.order_index));
-      setTechPartners((partnerRes || []).sort((a: TechPartner, b: TechPartner) => a.order_index - b.order_index));
-      setTestimonials((testimonialsRes || []).sort((a: Testimonial, b: Testimonial) => a.order_index - b.order_index));
-      setCareerValues((cValuesRes || []).sort((a: CareerValue, b: CareerValue) => a.order_index - b.order_index));
-      setCareerTechStack((cTechRes || []).sort((a: CareerTech, b: CareerTech) => a.order_index - b.order_index));
-      setLegalSections((legalRes || []).sort((a: LegalSection, b: LegalSection) => a.order_index - b.order_index));
+
+      setBlogPosts(postsRes);
+      setJobs(jobsRes);
+      setProjects(projRes);
+      setPages(pagesRes);
+      setMessages(msgRes);
+      setSiteSettings(settingsRes);
+      setMenuItems((menuRes).sort((a: MenuItem, b: MenuItem) => a.order_index - b.order_index));
+      setHomeFeatures((featureRes).sort((a: Feature, b: Feature) => a.order_index - b.order_index));
+      setHomeServices((serviceRes).sort((a: ServiceItem, b: ServiceItem) => a.order_index - b.order_index));
+      setInfraFeatures((infraRes).sort((a: InfraFeature, b: InfraFeature) => a.order_index - b.order_index));
+      setTechPartners((partnerRes).sort((a: TechPartner, b: TechPartner) => a.order_index - b.order_index));
+      setTestimonials((testimonialsRes).sort((a: Testimonial, b: Testimonial) => a.order_index - b.order_index));
+      setCareerValues((cValuesRes).sort((a: CareerValue, b: CareerValue) => a.order_index - b.order_index));
+      setCareerTechStack((cTechRes).sort((a: CareerTech, b: CareerTech) => a.order_index - b.order_index));
+      setLegalSections((legalRes).sort((a: LegalSection, b: LegalSection) => a.order_index - b.order_index));
     } catch (error) {
       console.error("Failed to fetch data", error);
     }
