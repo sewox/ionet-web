@@ -14,14 +14,36 @@ const rateLimit = require('express-rate-limit');
 const { fileTypeFromBuffer } = require('file-type');
 
 
-// Robust .env loading
+// Robust .env loading with environment support
 const fs = require('fs');
 
-const envPath = path.resolve(__dirname, '../.env');
-if (fs.existsSync(envPath)) {
-    require('dotenv').config({ path: envPath });
-} else {
-    require('dotenv').config(); // Fallback to default
+// Determine which .env file to load based on NODE_ENV
+const nodeEnv = process.env.NODE_ENV || 'development';
+const envFiles = [
+    path.resolve(__dirname, `../.env.${nodeEnv}.local`),  // Local override (highest priority)
+    path.resolve(__dirname, `../.env.${nodeEnv}`),        // Environment-specific
+    path.resolve(__dirname, '../.env.local'),              // Local override
+    path.resolve(__dirname, '../.env')                     // Default fallback
+];
+
+console.log(`\n${'='.repeat(60)}`);
+console.log(`🚀 Starting I/ONET Server`);
+console.log(`${'='.repeat(60)}`);
+console.log(`📦 Environment: ${nodeEnv}`);
+
+// Load the first .env file that exists
+let envFileLoaded = false;
+for (const envFile of envFiles) {
+    if (fs.existsSync(envFile)) {
+        require('dotenv').config({ path: envFile });
+        console.log(`✓ Loaded environment from: ${path.basename(envFile)}`);
+        envFileLoaded = true;
+        break;
+    }
+}
+
+if (!envFileLoaded) {
+    console.warn('⚠ Warning: No .env file found, using system environment variables');
 }
 
 // Validate required environment variables on startup
@@ -38,7 +60,16 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 // Handle both leading/trailing slashes for consistency
 const BASE_PATH = (process.env.VITE_BASE_PATH || '/ionet-web').replace(/\/+$/, '');
-console.log('Server BASE_PATH:', BASE_PATH);
+const DB_PATH = process.env.DB_PATH || 'server/database.sqlite';
+
+// Log configuration
+console.log(`\n📋 Server Configuration:`);
+console.log(`   - Port: ${PORT}`);
+console.log(`   - Base Path: ${BASE_PATH}`);
+console.log(`   - Database: ${DB_PATH}`);
+console.log(`   - Upload Dir: ${process.env.UPLOAD_DIR || 'server/uploads/'}`);
+console.log(`   - Allowed Origins: ${process.env.ALLOWED_ORIGINS || 'localhost only'}`);
+console.log(`${'='.repeat(60)}\n`);
 
 app.use((req, res, next) => {
     console.log(`[Request] ${req.method} ${req.url}`);
@@ -67,33 +98,39 @@ app.use(bodyParser.json({ limit: '50mb' }));
 // Serve uploads under BASE_PATH/uploads
 app.use(`${BASE_PATH}/uploads`, express.static(path.join(__dirname, process.env.UPLOAD_DIR || 'uploads')));
 
-// Rate limiting
-const generalLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
-    message: 'Too many requests from this IP, please try again later.',
-    standardHeaders: true,
-    legacyHeaders: false,
-});
+// Rate limiting - Disabled in development for easier testing
+const isDevelopment = (process.env.NODE_ENV || 'development') === 'development';
 
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // Limit each IP to 5 login attempts per windowMs
-    message: 'Too many login attempts, please try again later.',
-    standardHeaders: true,
-    legacyHeaders: false,
-});
+if (isDevelopment) {
+    console.log('⚠ Rate limiting DISABLED in development mode');
+} else {
+    const generalLimiter = rateLimit({
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        max: 100,
+        message: 'Too many requests from this IP, please try again later.',
+        standardHeaders: true,
+        legacyHeaders: false,
+    });
 
-const uploadLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 20, // Limit file uploads
-    message: 'Too many upload requests, please try again later.',
-    standardHeaders: true,
-    legacyHeaders: false,
-});
+    const authLimiter = rateLimit({
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        max: 5,
+        message: 'Too many login attempts, please try again later.',
+        standardHeaders: true,
+        legacyHeaders: false,
+    });
 
-// Apply general rate limiter to all routes
-app.use(generalLimiter);
+    const uploadLimiter = rateLimit({
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        max: 20,
+        message: 'Too many upload requests, please try again later.',
+        standardHeaders: true,
+        legacyHeaders: false,
+    });
+
+    // Apply general rate limiter to all routes
+    app.use(generalLimiter);
+}
 
 // Middleware to attach DB to request
 app.use(async (req, res, next) => {
@@ -366,8 +403,8 @@ const createCrud = (table, fields, excludeMethods = []) => {
     return router;
 };
 
-// Login Endpoint - JWT based authentication with rate limiting
-app.post(`${BASE_PATH}/api/auth/login`, authLimiter, async (req, res) => {
+// Login Endpoint - JWT based authentication
+app.post(`${BASE_PATH}/api/auth/login`, async (req, res) => {
     const { password } = req.body;
 
     // Validate password is provided
@@ -560,7 +597,7 @@ const upload = multer({
     }
 });
 
-app.post(`${BASE_PATH}/api/upload`, uploadLimiter, authenticate, upload.single('file'), async (req, res) => {
+app.post(`${BASE_PATH}/api/upload`, authenticate, upload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
     try {
@@ -678,6 +715,32 @@ app.get(`${BASE_PATH}/robots.txt`, async (req, res) => {
         res.send(`User-agent: *\nAllow: /\n\nSitemap: ${baseUrl}/sitemap.xml`);
     } catch (err) {
         res.status(500).send("Error");
+    }
+});
+
+// --- Health Check and Environment Info ---
+app.get(`${BASE_PATH}/api/health`, async (req, res) => {
+    try {
+        const dbCheck = await req.db.get("SELECT 1 as test");
+        const uptime = process.uptime();
+        const environment = process.env.NODE_ENV || 'development';
+
+        res.json({
+            status: 'healthy',
+            environment: environment,
+            uptime: Math.floor(uptime),
+            uptimeFormatted: `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m`,
+            database: dbCheck ? 'connected' : 'error',
+            databasePath: process.env.DB_PATH || 'server/database.sqlite',
+            timestamp: new Date().toISOString(),
+            version: '1.0.0'
+        });
+    } catch (err) {
+        console.error('Health check error:', err);
+        res.status(500).json({
+            status: 'unhealthy',
+            error: 'Database connection failed'
+        });
     }
 });
 

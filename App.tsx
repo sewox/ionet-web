@@ -29,6 +29,36 @@ const PageLoader = () => (
   </div>
 );
 
+// Environment Indicator Badge (only shows in dev/stage)
+const EnvironmentBadge: React.FC = () => {
+  const env = import.meta.env.VITE_APP_ENV || import.meta.env.MODE;
+
+  // Don't show in production
+  if (env === 'production') return null;
+
+  const getBadgeColor = () => {
+    switch (env) {
+      case 'development':
+        return 'bg-green-500';
+      case 'staging':
+      case 'stage':
+        return 'bg-orange-500';
+      default:
+        return 'bg-blue-500';
+    }
+  };
+
+  return (
+    <div
+      className={`fixed top-4 left-4 z-[9999] ${getBadgeColor()} text-white px-3 py-1.5 rounded-md shadow-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2`}
+      title={`Running in ${env} environment`}
+    >
+      <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+      {env.toUpperCase()}
+    </div>
+  );
+};
+
 const Header: React.FC = () => {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith('/ionet-web/admin') || location.pathname === '/ionet-web/login';
@@ -267,7 +297,7 @@ const Footer: React.FC = () => {
 const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
   const { isAuthenticated } = useAuth();
   if (!isAuthenticated) {
-    return <Navigate to="/ionet-web/admin/login" replace />;
+    return <Navigate to="/admin/login" replace />;
   }
   return children;
 };
@@ -278,27 +308,28 @@ const App: React.FC = () => {
       <DataProvider>
         <BrowserRouter basename={import.meta.env.VITE_BASE_PATH || "/ionet-web"}>
           <div className="flex flex-col min-h-screen">
+            <EnvironmentBadge />
             <Header />
             <main className="flex-grow">
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   {/* Public Routes */}
-                  <Route path="/ionet-web" element={<Home />} />
-                  <Route path="/ionet-web/contact" element={<Contact />} />
-                  <Route path="/ionet-web/infrastructure" element={<Infrastructure />} />
-                  <Route path="/ionet-web/references" element={<References />} />
-                  <Route path="/ionet-web/pricing" element={<Pricing />} />
-                  <Route path="/ionet-web/careers" element={<Careers />} />
-                  <Route path="/ionet-web/blog" element={<Blog />} />
-                  <Route path="/ionet-web/article/:id" element={<BlogPost />} />
-                  <Route path="/ionet-web/legal" element={<Legal />} />
+                  <Route path="/" element={<Home />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/infrastructure" element={<Infrastructure />} />
+                  <Route path="/references" element={<References />} />
+                  <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/careers" element={<Careers />} />
+                  <Route path="/blog" element={<Blog />} />
+                  <Route path="/article/:id" element={<BlogPost />} />
+                  <Route path="/legal" element={<Legal />} />
 
                   {/* Admin Routes */}
                   {/* Redirect /admin to /admin/dashboard */}
-                  <Route path="/ionet-web/admin" element={<Navigate to="/ionet-web/admin/dashboard" replace />} />
-                  <Route path="/ionet-web/admin/login" element={<AdminLogin />} />
+                  <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+                  <Route path="/admin/login" element={<AdminLogin />} />
                   <Route
-                    path="/ionet-web/admin/dashboard"
+                    path="/admin/dashboard"
                     element={
                       <ProtectedRoute>
                         <AdminDashboard />

@@ -208,7 +208,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [legalSections, setLegalSections] = useState<LegalSection[]>([]);
 
   // Dynamic API Base Path
-  const API_BASE = ((import.meta as any).env.VITE_BASE_PATH || '/ionet-web').replace(/\/$/, '');
+  const basePath = (import.meta as any).env.VITE_BASE_PATH || '/ionet-web';
+  const API_BASE = basePath === '/' ? '' : basePath.replace(/\/$/, '');
 
   const fetchData = async () => {
     const fetchWithLog = async (endpoint: string) => {
@@ -216,7 +217,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       try {
         const res = await fetch(url);
         if (!res.ok) {
-          console.error(`[DataContext] Fetch failed for ${url}: ${res.status} ${res.statustext}`);
+          console.error(`[DataContext] Fetch failed for ${url}: ${res.status} ${res.statusText}`);
           const text = await res.text();
           console.error(`[DataContext] Response body for ${url}:`, text.substring(0, 500));
           return [];

@@ -1,10 +1,22 @@
 const sqlite3 = require('sqlite3').verbose();
 const { open } = require('sqlite');
 const path = require('path');
+const fs = require('fs');
 
 async function getDb() {
+  // Use DB_PATH from environment or fallback to default
+  const dbPath = process.env.DB_PATH || 'server/database.sqlite';
+  const fullDbPath = path.resolve(__dirname, '..', dbPath);
+
+  // Ensure database directory exists
+  const dbDir = path.dirname(fullDbPath);
+  if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+    console.log(`✓ Created database directory: ${dbDir}`);
+  }
+
   const db = await open({
-    filename: path.resolve(__dirname, 'database.sqlite'),
+    filename: fullDbPath,
     driver: sqlite3.Database
   });
 
