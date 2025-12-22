@@ -211,37 +211,67 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const basePath = (import.meta as any).env.VITE_BASE_PATH || '/ionet-web';
   const API_BASE = basePath === '/' ? '' : basePath.replace(/\/$/, '');
 
+  // Lazy loading: Only fetch essential data on mount
   const fetchData = async () => {
     const fetchWithLog = async (endpoint: string) => {
       const url = `${API_BASE}${endpoint}`;
       try {
         const res = await fetch(url);
         if (!res.ok) {
-          console.error(`[DataContext] Fetch failed for ${url}: ${res.status} ${res.statusText}`);
-          const text = await res.text();
-          console.error(`[DataContext] Response body for ${url}:`, text.substring(0, 500));
+          console.warn(`[DataContext] Fetch failed for ${url}: ${res.status} ${res.statusText}`);
+          // Don't log full response body in production to reduce noise
+          if (process.env.NODE_ENV === 'development') {
+            const text = await res.text();
+            console.error(`[DataContext] Response body for ${url}:`, text.substring(0, 200));
+          }
           return [];
         }
         return await res.json();
       } catch (error) {
-        console.error(`[DataContext] Network error for ${url}:`, error);
+        console.warn(`[DataContext] Network error for ${url}:`, error);
+        return [];
+      }
+    };
+
+    try {
+      // OPTIMIZATION: Only fetch essential data on initial load
+      // Settings fetch is optional (may fail if DB not seeded)
+      const settingsRes = await fetchWithLog('/api/settings').catch(() => []);
+      const menuRes = await fetchWithLog('/api/menu_items');
+
+      // Set initial data
+      setSiteSettings(settingsRes);
+      setMenuItems((menuRes).sort((a: MenuItem, b: MenuItem) => a.order_index - b.order_index));
+
+      // Other data will be loaded lazily when components mount
+      // This improves initial page load performance
+    } catch (error) {
+      console.error("Failed to fetch initial data", error);
+    }
+  };
+
+  // Fetch all data (for admin or when needed)
+  const fetchAllData = async () => {
+    const fetchWithLog = async (endpoint: string) => {
+      const url = `${API_BASE}${endpoint}`;
+      try {
+        const res = await fetch(url);
+        if (!res.ok) return [];
+        return await res.json();
+      } catch (error) {
         return [];
       }
     };
 
     try {
       const [
-        postsRes, jobsRes, projRes, pagesRes, msgRes, settingsRes, menuRes,
-        featureRes, serviceRes, infraRes, partnerRes, testimonialsRes,
-        cValuesRes, cTechRes, legalRes
+        postsRes, jobsRes, projRes, pagesRes, featureRes, serviceRes,
+        infraRes, partnerRes, testimonialsRes, cValuesRes, cTechRes, legalRes
       ] = await Promise.all([
         fetchWithLog('/api/blog_posts'),
         fetchWithLog('/api/jobs'),
         fetchWithLog('/api/projects'),
         fetchWithLog('/api/pages'),
-        fetchWithLog('/api/messages'),
-        fetchWithLog('/api/settings'),
-        fetchWithLog('/api/menu_items'),
         fetchWithLog('/api/home_features'),
         fetchWithLog('/api/home_services'),
         fetchWithLog('/api/infrastructure_features'),
@@ -256,9 +286,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setJobs(jobsRes);
       setProjects(projRes);
       setPages(pagesRes);
-      setMessages(msgRes);
-      setSiteSettings(settingsRes);
-      setMenuItems((menuRes).sort((a: MenuItem, b: MenuItem) => a.order_index - b.order_index));
       setHomeFeatures((featureRes).sort((a: Feature, b: Feature) => a.order_index - b.order_index));
       setHomeServices((serviceRes).sort((a: ServiceItem, b: ServiceItem) => a.order_index - b.order_index));
       setInfraFeatures((infraRes).sort((a: InfraFeature, b: InfraFeature) => a.order_index - b.order_index));
@@ -268,12 +295,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setCareerTechStack((cTechRes).sort((a: CareerTech, b: CareerTech) => a.order_index - b.order_index));
       setLegalSections((legalRes).sort((a: LegalSection, b: LegalSection) => a.order_index - b.order_index));
     } catch (error) {
-      console.error("Failed to fetch data", error);
+      console.error("Failed to fetch all data", error);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    fetchData(); // Only fetch essential data initially
   }, []);
 
   // API Helpers...
