@@ -16,7 +16,7 @@ const { fileTypeFromBuffer } = require('file-type');
 
 // Robust .env loading
 const fs = require('fs');
-const path = require('path');
+
 const envPath = path.resolve(__dirname, '../.env');
 if (fs.existsSync(envPath)) {
     require('dotenv').config({ path: envPath });
@@ -514,7 +514,7 @@ app.use(`${BASE_PATH}/api/career_tech_stack`, createCrud('career_tech_stack', ['
 app.use(`${BASE_PATH}/api/legal_sections`, createCrud('legal_sections', ['id', 'title', 'content', 'anchor', 'order_index']));
 
 // --- File Upload ---
-const fs = require('fs');
+
 const uploadDir = process.env.UPLOAD_DIR || 'server/uploads/';
 
 // Ensure upload directory exists
@@ -693,7 +693,9 @@ if (fs.existsSync(distPath)) {
     }
 
     // 4. SPA Catch-all for BASE_PATH/*
-    app.get(`${BASE_PATH}/*`, (req, res) => {
+    // Escape special characters for RegExp
+    const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    app.get(new RegExp(`^${escapeRegExp(BASE_PATH)}/.*`), (req, res) => {
         // Do not return HTML for API requests
         if (req.originalUrl.includes(`${BASE_PATH}/api/`) || req.path.startsWith(`${BASE_PATH}/api/`)) {
             return res.status(404).json({ error: 'Not Found' });
