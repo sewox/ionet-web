@@ -100,6 +100,8 @@ npm run preview          # Preview production build
 
 ### Deployment
 
+#### Traditional Deployment
+
 ```bash
 # Automated setup (creates environment, builds, and starts PM2)
 sudo ./setup.sh
@@ -113,7 +115,26 @@ sudo ./setup.sh
 ./deploy.sh production
 ```
 
-📖 **Detailed Setup Guide**: See [ENVIRONMENT_SETUP.md](ENVIRONMENT_SETUP.md) for comprehensive documentation.
+#### Docker Deployment (Coolify)
+
+For containerized deployment using Coolify or Docker:
+
+```bash
+# Build staging image
+docker build --build-arg BUILD_ENV=stage -t ionet-web:stage .
+
+# Build production image
+docker build --build-arg BUILD_ENV=production -t ionet-web:prod .
+
+# Run with Docker Compose
+docker-compose -f docker-compose.stage.yml up -d    # Staging
+docker-compose -f docker-compose.prod.yml up -d     # Production
+```
+
+📖 **Coolify Deployment Guide**: See [COOLIFY_DEPLOYMENT.md](COOLIFY_DEPLOYMENT.md) for comprehensive Docker deployment instructions.
+
+📖 **Traditional Setup Guide**: See [ENVIRONMENT_SETUP.md](ENVIRONMENT_SETUP.md) for comprehensive documentation.
+
 
 ---
 
@@ -277,6 +298,7 @@ For support and questions:
 ## 🎓 Additional Resources
 
 - [ENVIRONMENT_SETUP.md](ENVIRONMENT_SETUP.md) - Detailed environment configuration guide
+- [COOLIFY_DEPLOYMENT.md](COOLIFY_DEPLOYMENT.md) - Docker and Coolify deployment guide
 - [.env.example](.env.example) - Environment variables template
 - Server logs: `pm2 logs ionet-[environment]`
 
