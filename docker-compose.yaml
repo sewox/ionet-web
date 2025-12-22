@@ -1,30 +1,35 @@
 version: '3.8'
 
 services:
-  ionet-web-stage:
+  ionet-web:
     build:
       context: .
       dockerfile: Dockerfile
       args:
-        BUILD_ENV: stage
-    image: ionet-web:stage
-    container_name: ionet-web-stage
-    restart: unless-stopped
+        # Set BUILD_ENV based on your deployment (stage or production)
+        BUILD_ENV: ${BUILD_ENV:-production}
+        # Pass Vite environment variables to build
+        VITE_BASE_PATH: ${VITE_BASE_PATH:-/}
+        VITE_API_URL: ${VITE_API_URL}
+        VITE_APP_ENV: ${VITE_APP_ENV}
 
-    # Environment variables from .env.stage
-    env_file:
-      - .env.stage
+    container_name: ionet-web
+    restart: unless-stopped
 
     # Port mapping
     ports:
-      - "3001:3001"
+      - "${PORT:-3001}:3001"
+
+    # Environment variables are set directly in Coolify UI
+    # or passed via docker run -e flags
+    # No .env file needed in container
 
     # Volume mounts for persistence
     volumes:
       # Database persistence
-      - stage-db:/app/server/db
+      - app-db:/app/server/db
       # Upload files persistence
-      - stage-uploads:/app/server/uploads
+      - app-uploads:/app/server/uploads
 
     # Health check
     healthcheck:
@@ -43,16 +48,16 @@ services:
 
     # Network
     networks:
-      - ionet-network
+      - app-network
 
 # Volumes for data persistence
 volumes:
-  stage-db:
+  app-db:
     driver: local
-  stage-uploads:
+  app-uploads:
     driver: local
 
 # Networks
 networks:
-  ionet-network:
+  app-network:
     driver: bridge
