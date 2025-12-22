@@ -14,11 +14,20 @@ const rateLimit = require('express-rate-limit');
 const { fileTypeFromBuffer } = require('file-type');
 
 
-// Robust .env loading with environment support
+// Robust environment variable loading
+// Supports both .env files (local development) and injected env vars (Docker/Coolify)
 const fs = require('fs');
 
 // Determine which .env file to load based on NODE_ENV
 const nodeEnv = process.env.NODE_ENV || 'development';
+
+console.log(`\n${'='.repeat(60)}`);
+console.log(`🚀 Starting I/ONET Server`);
+console.log(`${'='.repeat(60)}`);
+console.log(`📦 Environment: ${nodeEnv}`);
+
+// Try to load .env files only if they exist (for local development)
+// In Docker/Coolify, environment variables are injected directly
 const envFiles = [
     path.resolve(__dirname, `../.env.${nodeEnv}.local`),  // Local override (highest priority)
     path.resolve(__dirname, `../.env.${nodeEnv}`),        // Environment-specific
@@ -26,12 +35,6 @@ const envFiles = [
     path.resolve(__dirname, '../.env')                     // Default fallback
 ];
 
-console.log(`\n${'='.repeat(60)}`);
-console.log(`🚀 Starting I/ONET Server`);
-console.log(`${'='.repeat(60)}`);
-console.log(`📦 Environment: ${nodeEnv}`);
-
-// Load the first .env file that exists
 let envFileLoaded = false;
 for (const envFile of envFiles) {
     if (fs.existsSync(envFile)) {
@@ -43,17 +46,29 @@ for (const envFile of envFiles) {
 }
 
 if (!envFileLoaded) {
-    console.warn('⚠ Warning: No .env file found, using system environment variables');
+    console.log('ℹ No .env file found - using environment variables from system/container');
+    console.log('  (This is normal for Docker/Coolify deployments)');
 }
 
 // Validate required environment variables on startup
 const requiredEnvVars = ['JWT_SECRET', 'ADMIN_PASSWORD_HASH'];
+const missingVars = [];
+
 for (const envVar of requiredEnvVars) {
     if (!process.env[envVar]) {
-        console.error(`ERROR: Required environment variable ${envVar} is not set.`);
-        console.error('Please check server/README.md for setup instructions.');
-        process.exit(1);
+        missingVars.push(envVar);
     }
+}
+
+if (missingVars.length > 0) {
+    console.error(`\n${'='.repeat(60)}`);
+    console.error(`❌ ERROR: Missing required environment variables:`);
+    missingVars.forEach(varName => console.error(`   - ${varName}`));
+    console.error(`\nPlease configure these variables in:`);
+    console.error(`  - Local: .env file`);
+    console.error(`  - Docker/Coolify: Environment Variables in the UI`);
+    console.error(`${'='.repeat(60)}\n`);
+    process.exit(1);
 }
 
 const app = express();

@@ -20,20 +20,22 @@ Bu rehber, ionet-web uygulamasının Coolify üzerinde nasıl deploy edileceğin
 
 1. Git Source seçin (GitHub, GitLab, vb.)
 2. Repository URL'inizi girin
-3. Branch seçin:
-   - **Staging** için: `stage` veya `develop`
-   - **Production** için: `main` veya `master`
+3. Branch seçin (örn: `main`, `master`, veya `develop`)
+
+> [!NOTE]
+> Coolify tek bir `docker-compose.yml` dosyası kullanır. Environment variable'lar Coolify UI'dan eklenir, `.env` dosyası gerekmez.
 
 ## 2. Environment Configuration
 
-### 2.1. Staging Ortamı
+> [!IMPORTANT]
+> Coolify'da tüm environment variable'lar UI üzerinden eklenir. Container içinde `.env` dosyası aranmaz. Aşağıdaki değişkenleri **Coolify Environment Variables** bölümüne ekleyin.
 
-**Docker Compose File**: `docker-compose.stage.yml`
+### 2.1. Staging Environment Variables
 
 > [!IMPORTANT]
-> Aşağıdaki environment variable'larda yer alan **`your-staging-domain.com`** placeholder'ını kendi staging domain'iniz ile değiştirin.
-
-**Environment Variables** (Coolify UI'dan ekleyin):
+> **Coolify UI'da ekleyin** - `.env` dosyası kullanılmaz!
+> 
+> Aşağıdaki tüm değişkenleri Coolify'da **Environment Variables** bölümüne ekleyin. `your-staging-domain.com` yerine kendi domain'inizi yazın.
 
 ```bash
 # Server Configuration
@@ -72,14 +74,12 @@ MAIL_FROM=noreply@your-domain.com
 MAIL_TO=admin@your-domain.com
 ```
 
-### 2.2. Production Ortamı
-
-**Docker Compose File**: `docker-compose.prod.yml`
+### 2.2. Production Environment Variables
 
 > [!WARNING]
-> Production ortamı için **`your-domain.com`** placeholder'ını kendi production domain'iniz ile değiştirin. Güvenlik ayarlarını mutlaka güncelleyin!
-
-**Environment Variables**:
+> **Production Kritik!** - Tüm güvenlik ayarlarını mutlaka güncelleyin.
+>
+> Bu değişkenleri Coolify'da **Environment Variables** bölümüne ekleyin. `your-domain.com` yerine kendi domain'inizi yazın.
 
 ```bash
 # Server Configuration
@@ -121,17 +121,14 @@ MAIL_TO=admin@your-domain.com
 
 ## 3. Volume Configuration
 
-Coolify persistent volume ayarları:
+> [!NOTE]
+> Volume'ler `docker-compose.yml` dosyasında tanımlıdır. Coolify otomatik olarak bu tanımları kullanacaktır.
 
-### Staging Volumes
-- `stage-db` → `/app/server/db`
-- `stage-uploads` → `/app/server/uploads`
+**Persistent Volumes**:
+- `app-db` → `/app/server/db` (Database dosyaları)
+- `app-uploads` → `/app/server/uploads` (Upload edilen dosyalar)
 
-### Production Volumes
-- `prod-db` → `/app/server/db`
-- `prod-uploads` → `/app/server/uploads`
-
-> **Not**: Coolify otomatik olarak docker-compose.yml'deki volume tanımlarını kullanacaktır.
+Bu volume'ler container yeniden başlatıldığında veya update edildiğinde verilerinizi korur.
 
 ## 4. Domain ve SSL Yapılandırması
 
@@ -170,21 +167,31 @@ www.your-domain.com        →    <coolify-server-ip>
 
 ## 5. Build ve Deployment
 
-### 5.1. İlk Deployment
+### 5.1. Build Environment Variable
 
-1. Tüm ayarları tamamladıktan sonra **"Deploy"** butonuna tıklayın
+> [!IMPORTANT]
+> Coolify'da build yapmadan önce **BUILD_ENV** environment variable'ını ekleyin:
+> - Staging için: `BUILD_ENV=stage`  
+> - Production için: `BUILD_ENV=production`
+>
+> Bu değişken Vite build'ini doğru yapılandıracaktır.
+
+### 5.2. İlk Deployment
+
+1. Tüm environment variable'ları ekledikten sonra **"Deploy"** butonuna tıklayın
 2. Coolify şunları yapacaktır:
    - Git repository'yi clone edecek
-   - Docker image'ı build edecek
+   - Docker image'ı build edecek (BUILD_ENV'e göre)
    - Container'ı başlatacak
    - Health check yapacak
 
-### 5.2. Build Loglarını İzleme
+### 5.3. Build Loglarını İzleme
 
 - **"Logs"** sekmesinden build ve deployment sürecini izleyebilirsiniz
 - Hata durumunda logları kontrol edin
+- `.env file not found` mesajı normaldir - environment variables inject edilir
 
-### 5.3. Otomatik Deployment
+### 5.4. Otomatik Deployment
 
 Coolify, Git repository'deki değişiklikleri otomatik olarak deploy edebilir:
 
