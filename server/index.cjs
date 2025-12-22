@@ -38,6 +38,12 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 // Handle both leading/trailing slashes for consistency
 const BASE_PATH = (process.env.VITE_BASE_PATH || '/ionet-web').replace(/\/+$/, '');
+console.log('Server BASE_PATH:', BASE_PATH);
+
+app.use((req, res, next) => {
+    console.log(`[Request] ${req.method} ${req.url}`);
+    next();
+});
 
 // CORS Configuration - restrict to allowed origins
 const allowedOrigins = process.env.ALLOWED_ORIGINS

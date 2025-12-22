@@ -255,12 +255,19 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // API Helpers...
   const getHeaders = () => {
-    const token = localStorage.getItem('authToken');
+    let token = '';
+    try {
+      token = localStorage.getItem('authToken') || '';
+    } catch (e) {
+      console.warn('LocalStorage access denied');
+    }
     return {
       'Content-Type': 'application/json',
       'Authorization': token ? `Bearer ${token}` : ''
     };
   };
+
+  console.log('API_BASE Debug:', API_BASE);
 
   const postData = async (url: string, data: any) => {
     // If URL is absolute/relative starting with /, prepend API_BASE if not already present?
