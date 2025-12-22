@@ -38,8 +38,8 @@ const sampleData = {
     site_settings: [
         { id: uuidv4(), ckey: 'site_title', value: 'I/ONET Teknoloji', group_name: 'general', type: 'text' },
         { id: uuidv4(), ckey: 'site_description', value: 'Kurumsal IT Çözümleri ve Bulut Hizmetleri', group_name: 'general', type: 'text' },
-        { id: uuidv4(), ckey: 'site_url', value: 'https://www.ionet.com.tr', group_name: 'general', type: 'text' },
-        { id: uuidv4(), ckey: 'contact_email', value: 'info@ionet.com.tr', group_name: 'contact', type: 'email' },
+        { id: uuidv4(), ckey: 'site_url', value: process.env.SITE_URL || 'https://your-domain.com', group_name: 'general', type: 'text' },
+        { id: uuidv4(), ckey: 'contact_email', value: process.env.MAIL_TO || 'info@your-domain.com', group_name: 'contact', type: 'email' },
         { id: uuidv4(), ckey: 'contact_phone', value: '+90 (212) 555 00 00', group_name: 'contact', type: 'text' },
         { id: uuidv4(), ckey: 'contact_address', value: 'Teknopark İstanbul, Sanayi Mah. 34906 Pendik/İstanbul', group_name: 'contact', type: 'textarea' },
         { id: uuidv4(), ckey: 'header_logo_text', value: 'I/ONET', group_name: 'branding', type: 'text' },

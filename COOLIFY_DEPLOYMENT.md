@@ -45,6 +45,10 @@ NODE_ENV=staging
 # Database
 DB_PATH=server/db/stage.db
 
+# Site URL (for SEO sitemap/robots.txt)
+# ⚠️ KENDİ DOMAIN'İNİZİ GİRİN
+SITE_URL=https://your-staging-domain.com
+
 # Security - ÖNEMLİ: Bu değerleri değiştirin!
 JWT_SECRET=<güvenli-64-karakterlik-hex-secret>
 ADMIN_PASSWORD_HASH=<bcrypt-hash>
@@ -88,6 +92,10 @@ NODE_ENV=production
 
 # Database
 DB_PATH=server/db/prod.db
+
+# Site URL (for SEO sitemap/robots.txt)
+# ⚠️ KENDİ PRODUCTION DOMAIN'İNİZİ GİRİN
+SITE_URL=https://your-domain.com
 
 # Security - KRİTİK: Güvenli değerler kullanın!
 JWT_SECRET=<güvenli-64-karakterlik-hex-secret>

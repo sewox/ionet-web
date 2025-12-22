@@ -302,7 +302,7 @@ const createCrud = (table, fields, excludeMethods = []) => {
                         const host = settings.smtp_host;
                         const user = settings.smtp_user;
                         const pass = settings.smtp_pass;
-                        const to = settings.mail_to || process.env.MAIL_TO || 'admin@ionet.com.tr';
+                        const to = settings.mail_to || process.env.MAIL_TO || 'admin@your-domain.com';
                         let transporter;
 
                         if (host && user && pass) {
@@ -344,7 +344,7 @@ const createCrud = (table, fields, excludeMethods = []) => {
                         };
 
                         await transporter.sendMail({
-                            from: `"I/ONET Website" <${user || process.env.MAIL_FROM || 'contact@ionet.com.tr'}>`,
+                            from: `"I/ONET Website" <${user || process.env.MAIL_FROM || 'noreply@your-domain.com'}>`,
                             to: to,
                             subject: replacer(subject),
                             html: replacer(html),
@@ -677,7 +677,6 @@ app.post(`${BASE_PATH}/api/upload`, authenticate, upload.single('file'), async (
     }
 });
 
-// --- SEO Routes ---
 app.get(`${BASE_PATH}/sitemap.xml`, async (req, res) => {
     try {
         const settings = await req.db.all("SELECT ckey, value FROM site_settings");
@@ -685,7 +684,9 @@ app.get(`${BASE_PATH}/sitemap.xml`, async (req, res) => {
             const row = settings.find(s => s.ckey === key);
             return row ? row.value : def;
         };
-        let baseUrl = getSetting('site_url', 'https://www.ionet.com.tr');
+
+        // Use SITE_URL environment variable, fallback to site_settings, then to a generic placeholder
+        let baseUrl = process.env.SITE_URL || getSetting('site_url', 'https://your-domain.com');
         if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
 
         const pages = await req.db.all("SELECT slug FROM pages");
@@ -723,8 +724,14 @@ app.get(`${BASE_PATH}/sitemap.xml`, async (req, res) => {
 
 app.get(`${BASE_PATH}/robots.txt`, async (req, res) => {
     try {
-        const row = await req.db.get("SELECT value FROM site_settings WHERE ckey = 'site_url'");
-        let baseUrl = row ? row.value : 'https://www.ionet.com.tr';
+        // Use SITE_URL environment variable, fallback to site_settings
+        let baseUrl = process.env.SITE_URL;
+
+        if (!baseUrl) {
+            const row = await req.db.get("SELECT value FROM site_settings WHERE ckey = 'site_url'");
+            baseUrl = row ? row.value : 'https://your-domain.com';
+        }
+
         if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
         res.set('Content-Type', 'text/plain');
         res.send(`User-agent: *\nAllow: /\n\nSitemap: ${baseUrl}/sitemap.xml`);
