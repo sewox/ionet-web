@@ -73,8 +73,13 @@ if (missingVars.length > 0) {
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-// Handle both leading/trailing slashes for consistency
-const BASE_PATH = (process.env.VITE_BASE_PATH || '/ionet-web').replace(/\/+$/, '');
+
+// Handle base path correctly - if root (/), keep it as /, otherwise remove trailing slash
+let BASE_PATH = process.env.VITE_BASE_PATH || '/';
+if (BASE_PATH !== '/') {
+    BASE_PATH = BASE_PATH.replace(/\/+$/, ''); // Remove trailing slash only if not root
+}
+
 const DB_PATH = process.env.DB_PATH || 'server/database.sqlite';
 
 // Log configuration
