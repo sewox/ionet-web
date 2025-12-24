@@ -192,7 +192,7 @@ const ContentManager: React.FC = () => {
                 headers['Authorization'] = `Bearer ${token}`;
             }
             
-            const res = await fetch('/api/upload', {
+            const res = await fetch('/v1/upload', {
                 method: 'POST',
                 headers,
                 body: formData

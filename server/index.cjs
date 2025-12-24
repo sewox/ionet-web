@@ -424,7 +424,7 @@ const createCrud = (table, fields, excludeMethods = []) => {
 };
 
 // Login Endpoint - JWT based authentication
-app.post(`${BASE_PATH}/api/auth/login`, async (req, res) => {
+app.post(`${BASE_PATH}/v1/auth/login`, async (req, res) => {
     const { password } = req.body;
 
     // Validate password is provided
@@ -461,9 +461,9 @@ app.post(`${BASE_PATH}/api/auth/login`, async (req, res) => {
 });
 
 // --- Routes ---
-app.use(`${BASE_PATH}/api/blog_posts`, createCrud('blog_posts', ['id', 'title', 'category', 'date', 'summary', 'image', 'content']));
-app.use(`${BASE_PATH}/api/jobs`, createCrud('jobs', ['id', 'title', 'type', 'location', 'time', 'exp', 'department']));
-app.use(`${BASE_PATH}/api/projects`, createCrud('projects', ['id', 'title', 'category', 'description', 'image']));
+app.use(`${BASE_PATH}/v1/blog_posts`, createCrud('blog_posts', ['id', 'title', 'category', 'date', 'summary', 'image', 'content']));
+app.use(`${BASE_PATH}/v1/jobs`, createCrud('jobs', ['id', 'title', 'type', 'location', 'time', 'exp', 'department']));
+app.use(`${BASE_PATH}/v1/projects`, createCrud('projects', ['id', 'title', 'category', 'description', 'image']));
 
 // Pages Route
 const pagesRouter = createCrud('pages', ['id', 'slug', 'title', 'content', 'created_at']);
@@ -478,9 +478,9 @@ pagesRouter.get('/slug/:slug', async (req, res) => {
         res.status(500).json({ error: "Failed to fetch page" });
     }
 });
-app.use(`${BASE_PATH}/api/pages`, pagesRouter);
+app.use(`${BASE_PATH}/v1/pages`, pagesRouter);
 
-app.use(`${BASE_PATH}/api/messages`, createCrud('messages', ['id', 'name', 'surname', 'email', 'phone', 'message', 'date']));
+app.use(`${BASE_PATH}/v1/messages`, createCrud('messages', ['id', 'name', 'surname', 'email', 'phone', 'message', 'date']));
 
 // --- Settings Route ---
 const settingsRouter = express.Router();
@@ -564,17 +564,17 @@ settingsRouter.delete('/:ckey', authenticate, async (req, res) => {
         res.status(500).json({ error: "Failed to delete setting" });
     }
 });
-app.use(`${BASE_PATH}/api/settings`, settingsRouter);
+app.use(`${BASE_PATH}/v1/settings`, settingsRouter);
 
-app.use(`${BASE_PATH}/api/menu_items`, createCrud('menu_items', ['id', 'label', 'url', 'order_index']));
-app.use(`${BASE_PATH}/api/home_features`, createCrud('home_features', ['id', 'title', 'description', 'icon', 'order_index']));
-app.use(`${BASE_PATH}/api/home_services`, createCrud('home_services', ['id', 'title', 'description', 'icon', 'link', 'order_index']));
-app.use(`${BASE_PATH}/api/infrastructure_features`, createCrud('infrastructure_features', ['id', 'title', 'description', 'icon', 'points', 'order_index']));
-app.use(`${BASE_PATH}/api/tech_partners`, createCrud('tech_partners', ['id', 'name', 'icon', 'order_index']));
-app.use(`${BASE_PATH}/api/testimonials`, createCrud('testimonials', ['id', 'name', 'title', 'quote', 'image', 'order_index']));
-app.use(`${BASE_PATH}/api/career_values`, createCrud('career_values', ['id', 'title', 'description', 'icon', 'order_index']));
-app.use(`${BASE_PATH}/api/career_tech_stack`, createCrud('career_tech_stack', ['id', 'name', 'icon', 'order_index']));
-app.use(`${BASE_PATH}/api/legal_sections`, createCrud('legal_sections', ['id', 'title', 'content', 'anchor', 'order_index']));
+app.use(`${BASE_PATH}/v1/menu_items`, createCrud('menu_items', ['id', 'label', 'url', 'order_index']));
+app.use(`${BASE_PATH}/v1/home_features`, createCrud('home_features', ['id', 'title', 'description', 'icon', 'order_index']));
+app.use(`${BASE_PATH}/v1/home_services`, createCrud('home_services', ['id', 'title', 'description', 'icon', 'link', 'order_index']));
+app.use(`${BASE_PATH}/v1/infrastructure_features`, createCrud('infrastructure_features', ['id', 'title', 'description', 'icon', 'points', 'order_index']));
+app.use(`${BASE_PATH}/v1/tech_partners`, createCrud('tech_partners', ['id', 'name', 'icon', 'order_index']));
+app.use(`${BASE_PATH}/v1/testimonials`, createCrud('testimonials', ['id', 'name', 'title', 'quote', 'image', 'order_index']));
+app.use(`${BASE_PATH}/v1/career_values`, createCrud('career_values', ['id', 'title', 'description', 'icon', 'order_index']));
+app.use(`${BASE_PATH}/v1/career_tech_stack`, createCrud('career_tech_stack', ['id', 'name', 'icon', 'order_index']));
+app.use(`${BASE_PATH}/v1/legal_sections`, createCrud('legal_sections', ['id', 'title', 'content', 'anchor', 'order_index']));
 
 // --- File Upload ---
 
@@ -617,7 +617,7 @@ const upload = multer({
     }
 });
 
-app.post(`${BASE_PATH}/api/upload`, authenticate, upload.single('file'), async (req, res) => {
+app.post(`${BASE_PATH}/v1/upload`, authenticate, upload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
     try {
@@ -746,7 +746,7 @@ app.get(`${BASE_PATH}/robots.txt`, async (req, res) => {
 });
 
 // --- Health Check and Environment Info ---
-app.get(`${BASE_PATH}/api/health`, async (req, res) => {
+app.get(`${BASE_PATH}/v1/health`, async (req, res) => {
     try {
         const dbCheck = await req.db.get("SELECT 1 as test");
         const uptime = process.uptime();

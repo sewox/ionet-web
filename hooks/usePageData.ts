@@ -56,4 +56,4 @@ export function usePageData<T>(endpoint: string, dependencies: any[] = []): {
 }
 
 // Example usage in a component:
-// const { data: blogPosts, loading } = usePageData<BlogPost>('/api/blog_posts');
+// const { data: blogPosts, loading } = usePageData<BlogPost>('/v1/blog_posts');
