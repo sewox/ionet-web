@@ -6,9 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        # Set BUILD_ENV based on your deployment (stage or production)
         BUILD_ENV: ${BUILD_ENV:-production}
-        # Pass Vite environment variables to build
         VITE_BASE_PATH: ${VITE_BASE_PATH:-/}
         VITE_API_URL: ${VITE_API_URL}
         VITE_APP_ENV: ${VITE_APP_ENV}
@@ -16,29 +14,19 @@ services:
     container_name: ionet-web
     restart: unless-stopped
 
-    # Port mapping
+    # Port mapping (Local testler için kalsın, Traefik bunu kullanmaz)
     ports:
       - "${PORT:-3001}:3001"
 
-    # Environment variables are set directly in Coolify UI
-    # or passed via docker run -e flags
-    # No .env file needed in container
-
-    # Volume mounts for persistence
     volumes:
-      # Database persistence
       - app-db:/app/server/db
-      # Upload files persistence
       - app-uploads:/app/server/uploads
-    # Traefik labels for Coolify proxy
+
+    # SADECE Portu belirten etiketi bırakıyoruz, gerisini Coolify halledecek
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.ionet-web.rule=Host(`stage.ionetteknoloji.com.tr`)"
-      - "traefik.http.routers.ionet-web.entrypoints=websecure"
-      - "traefik.http.routers.ionet-web.tls.certresolver=letsencrypt"
       - "traefik.http.services.ionet-web.loadbalancer.server.port=3001"
-      - "coolify.managed=true"
-    # Health check
+
     healthcheck:
       test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:3001/ || exit 1" ]
       interval: 10s
@@ -46,25 +34,26 @@ services:
       retries: 3
       start_period: 10s
 
-    # Logging
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
 
-    # Network
+    # KRİTİK NOKTA: Coolify ağına dahil ediyoruz
     networks:
+      - coolify
       - app-network
 
-# Volumes for data persistence
 volumes:
   app-db:
     driver: local
   app-uploads:
     driver: local
 
-# Networks
 networks:
   app-network:
     driver: bridge
+  # Coolify ağını dışarıdan (external) olarak tanımlıyoruz
+  coolify:
+    external: true
