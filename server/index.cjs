@@ -788,14 +788,16 @@ if (fs.existsSync(distPath)) {
         app.get(BASE_PATH, (req, res) => res.redirect(`${BASE_PATH}/`));
     }
 
-    // 4. SPA Catch-all for BASE_PATH/*
-    // Escape special characters for RegExp
-    const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    app.get(new RegExp(`^${escapeRegExp(BASE_PATH)}/.*`), (req, res) => {
-        // Do not return HTML for API requests
-        if (req.originalUrl.includes(`${BASE_PATH}/api/`) || req.path.startsWith(`${BASE_PATH}/api/`)) {
+    // 4. SPA Catch-all route - serve index.html for all non-API paths
+    app.get('*', (req, res) => {
+        // Exclude API routes, sitemap, robots.txt
+        if (req.path.startsWith('/v1/') ||
+            req.path === '/sitemap.xml' ||
+            req.path === '/robots.txt') {
             return res.status(404).json({ error: 'Not Found' });
         }
+
+        // Serve index.html for all other routes (SPA)
         res.sendFile(path.join(distPath, 'index.html'));
     });
 } else {
