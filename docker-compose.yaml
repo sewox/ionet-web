@@ -10,11 +10,10 @@ services:
         VITE_BASE_PATH: ${VITE_BASE_PATH:-/}
         VITE_API_URL: ${VITE_API_URL}
         VITE_APP_ENV: ${VITE_APP_ENV}
-
     container_name: ionet-web
     restart: unless-stopped
 
-    # Port mapping (Local testler için kalsın, Traefik bunu kullanmaz)
+    # Port mapping (Traefik için değil, direkt IP erişimi için kalsın)
     ports:
       - "${PORT:-3001}:3001"
 
@@ -22,11 +21,7 @@ services:
       - app-db:/app/server/db
       - app-uploads:/app/server/uploads
 
-    # SADECE Portu belirten etiketi bırakıyoruz, gerisini Coolify halledecek
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.services.ionet-web.loadbalancer.server.port=3001"
-
+    # Healthcheck (Bunu koruyoruz)
     healthcheck:
       test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:3001/ || exit 1" ]
       interval: 10s
@@ -40,7 +35,7 @@ services:
         max-size: "10m"
         max-file: "3"
 
-    # KRİTİK NOKTA: Coolify ağına dahil ediyoruz
+    # KRİTİK NOKTA: Uygulamayı coolify ağına dahil ediyoruz
     networks:
       - coolify
       - app-network
@@ -54,6 +49,6 @@ volumes:
 networks:
   app-network:
     driver: bridge
-  # Coolify ağını dışarıdan (external) olarak tanımlıyoruz
+  # KRİTİK NOKTA: coolify ağını dışarıdan tanımlıyoruz
   coolify:
     external: true
