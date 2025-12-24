@@ -10,6 +10,8 @@ services:
         VITE_BASE_PATH: ${VITE_BASE_PATH:-/}
         VITE_API_URL: ${VITE_API_URL}
         VITE_APP_ENV: ${VITE_APP_ENV}
+    ports:
+      - "127.0.0.1:3001:3001"
 
     restart: unless-stopped
 
