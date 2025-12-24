@@ -32,7 +32,8 @@ services:
       - app-uploads:/app/server/uploads
 
     # Health check
-
+    healthcheck:
+      disable: true
 
     # Logging
     logging:
