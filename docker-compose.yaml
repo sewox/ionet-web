@@ -10,10 +10,10 @@ services:
         VITE_BASE_PATH: ${VITE_BASE_PATH:-/}
         VITE_API_URL: ${VITE_API_URL}
         VITE_APP_ENV: ${VITE_APP_ENV}
+
     container_name: ionet-web
     restart: unless-stopped
 
-    # Port mapping (Traefik için değil, direkt IP erişimi için kalsın)
     ports:
       - "${PORT:-3001}:3001"
 
@@ -21,23 +21,20 @@ services:
       - app-db:/app/server/db
       - app-uploads:/app/server/uploads
 
-    # Healthcheck (Bunu koruyoruz)
     healthcheck:
-      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:3001/ || exit 1" ]
-      interval: 10s
-      timeout: 5s
+      test: [ "CMD-SHELL", "node -e \"require('http').get('http://localhost:3001/v1/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})\"" ]
+      interval: 30s
+      timeout: 10s
       retries: 3
-      start_period: 10s
+      start_period: 40s
 
     logging:
-      driver: "json-file"
+      driver: json-file
       options:
         max-size: "10m"
         max-file: "3"
 
-    # KRİTİK NOKTA: Uygulamayı coolify ağına dahil ediyoruz
     networks:
-      - coolify
       - app-network
 
 volumes:
@@ -49,6 +46,3 @@ volumes:
 networks:
   app-network:
     driver: bridge
-  # KRİTİK NOKTA: coolify ağını dışarıdan tanımlıyoruz
-  coolify:
-    external: true

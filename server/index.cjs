@@ -791,8 +791,9 @@ if (fs.existsSync(distPath)) {
     // 4. SPA Catch-all - serve index.html for all non-API routes
     // Must be LAST and use middleware instead of route
     app.use((req, res) => {
-        // Exclude API routes, sitemap, robots.txt
+        // Exclude API routes, health check, sitemap, robots.txt
         if (req.path.startsWith('/v1/') ||
+            req.path === '/v1/health' ||
             req.path === '/sitemap.xml' ||
             req.path === '/robots.txt') {
             return res.status(404).json({ error: 'Not Found' });
