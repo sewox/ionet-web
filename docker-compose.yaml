@@ -30,7 +30,14 @@ services:
       - app-db:/app/server/db
       # Upload files persistence
       - app-uploads:/app/server/uploads
-
+    # Traefik labels for Coolify proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ionet-web.rule=Host(`stage.ionetteknoloji.com.tr`)"
+      - "traefik.http.routers.ionet-web.entrypoints=websecure"
+      - "traefik.http.routers.ionet-web.tls.certresolver=letsencrypt"
+      - "traefik.http.services.ionet-web.loadbalancer.server.port=3001"
+      - "coolify.managed=true"
     # Health check
     healthcheck:
       test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:3001/ || exit 1" ]
