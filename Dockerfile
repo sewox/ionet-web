@@ -1,7 +1,7 @@
-# Simple single-stage Dockerfile for staging
+# Dokploy Optimized Dockerfile
 FROM node:20-alpine
 
-# Install dumb-init for proper signal handling
+# Install system dependencies
 RUN apk add --no-cache dumb-init
 
 WORKDIR /app
@@ -9,38 +9,42 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install ALL dependencies (dev + prod) for building
-RUN npm install
+# Install dependencies
+RUN npm ci --only=production && \
+    npm cache clean --force
 
-# Copy all source files
+# Install dev dependencies for build
+RUN npm install --only=development
+
+# Copy source code
 COPY . .
 
-# Accept Vite environment variables as build args
-ARG BUILD_ENV=stage
+# Build arguments for Vite
 ARG VITE_BASE_PATH=/
 ARG VITE_API_URL
 ARG VITE_APP_ENV=staging
 
-# Set environment variables for build
-ENV VITE_BASE_PATH=${VITE_BASE_PATH}
-ENV VITE_API_URL=${VITE_API_URL}
-ENV VITE_APP_ENV=${VITE_APP_ENV}
+# Set build environment
+ENV VITE_BASE_PATH=$VITE_BASE_PATH \
+    VITE_API_URL=$VITE_API_URL \
+    VITE_APP_ENV=$VITE_APP_ENV
 
 # Build frontend
-RUN npm run build:stage
+RUN npm run build:${VITE_APP_ENV:-stage}
 
-# Create directories for runtime
+# Remove dev dependencies to reduce image size
+RUN npm prune --production
+
+# Create runtime directories
 RUN mkdir -p server/db server/uploads
 
 # Expose port
 EXPOSE 3001
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=40s \
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start_period=40s \
     CMD node -e "require('http').get('http://localhost:3001/v1/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})" || exit 1
 
-# Use dumb-init
+# Start application with dumb-init
 ENTRYPOINT ["dumb-init", "--"]
-
-# Start server
 CMD ["node", "server/index.cjs"]

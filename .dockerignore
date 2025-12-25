@@ -1,80 +1,57 @@
-# Dependencies
-node_modules
-npm-debug.log*
-
-# Build outputs
+# Build output
 dist
 
-# Development files
-.env.development
-.env
+# Dependencies
+node_modules
 
-# Git
-.git
-.gitignore
-.github
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Database files (created at runtime)
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
 
 # IDE
 .vscode
 .idea
-*.swp
-*.swo
-*~
 
-# OS
-.DS_Store
-Thumbs.db
+# Git
+.git
+.gitignore
 
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Test files
-*.test.js
-*.test.ts
-*.spec.js
-*.spec.ts
-__tests__
-
-# Documentation (except essential ones)
+# Documentation
 *.md
 !README.md
-!COOLIFY_DEPLOYMENT.md
 
-# Database files (will be created in volume)
-*.db
-*.sqlite
-*.sqlite3
-server/db/*.db
-
-# Uploads (will be mounted as volume)
-server/uploads/*
-public/uploads/*
+# Test files
+*.test.*
+*.spec.*
+__tests__
 
 # Deployment scripts
 deploy.sh
-debug-apache.sh
-diagnose-staging.sh
+debug-*.sh
+diagnose-*.sh
 setup.sh
-validate-env.sh
+validate-*.sh
 
-# Apache/Nginx configs
+# Server configs
 .apache
 .nginx
 
-# Docker files
-Dockerfile
-.dockerignore
-docker-compose*.yml
-
-# Coverage
-coverage
-.nyc_output
-
-# Temporary files
+# Misc
+.gemini
 tmp
 temp
-*.tmp
+coverage
