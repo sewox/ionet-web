@@ -193,7 +193,8 @@ const authenticate = (req, res, next) => {
     }
 
     // Consistent response for all authentication failures
-    return res.status(401).json({ error: errorReason });
+    //return res.status(401).json({ error: errorReason });
+    return res.status(200).json({ error: errorReason, success: false });
 };
 
 // Whitelist of allowed tables for CRUD operations
