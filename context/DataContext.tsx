@@ -216,7 +216,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const fetchWithLog = async (endpoint: string) => {
       const url = `${API_BASE}${endpoint}`;
       try {
-        const res = await fetch(url);
+        const res = await fetch(url, {
+          credentials: 'include' // Include httpOnly cookie for authentication
+        });
         if (!res.ok) {
           console.warn(`[DataContext] Fetch failed for ${url}: ${res.status} ${res.statusText}`);
           // Don't log full response body in production to reduce noise
@@ -255,7 +257,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const fetchWithLog = async (endpoint: string) => {
       const url = `${API_BASE}${endpoint}`;
       try {
-        const res = await fetch(url);
+        const res = await fetch(url, {
+          credentials: 'include' // Include httpOnly cookie for authentication
+        });
         if (!res.ok) return [];
         return await res.json();
       } catch (error) {
@@ -303,30 +307,20 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     fetchData(); // Only fetch essential data initially
   }, []);
 
-  // API Helpers...
+  // API Helpers - No longer needs Authorization header, cookies handle auth
   const getHeaders = () => {
-    let token = '';
-    try {
-      token = localStorage.getItem('authToken') || '';
-    } catch (e) {
-      console.warn('LocalStorage access denied');
-    }
     return {
-      'Content-Type': 'application/json',
-      'Authorization': token ? `Bearer ${token}` : ''
+      'Content-Type': 'application/json'
     };
   };
 
   console.log('API_BASE Debug:', API_BASE);
 
   const postData = async (url: string, data: any) => {
-    // If URL is absolute/relative starting with /, prepend API_BASE if not already present?
-    // Actually, callers pass full path '/v1/...'
-    // So we invoke callers with correct path OR we check here.
-    // Callers are below. we will update callers.
     const res = await fetch(url, {
       method: 'POST',
       headers: getHeaders(),
+      credentials: 'include', // Include httpOnly cookie for authentication
       body: JSON.stringify(data)
     });
     if (!res.ok) {
@@ -340,6 +334,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const res = await fetch(url + '/' + data.id, {
       method: 'PUT',
       headers: getHeaders(),
+      credentials: 'include', // Include httpOnly cookie for authentication
       body: JSON.stringify(data),
     });
     if (!res.ok) throw new Error('Update Failed');
@@ -349,7 +344,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const deleteData = async (url: string) => {
     const res = await fetch(url, {
       method: 'DELETE',
-      headers: getHeaders()
+      headers: getHeaders(),
+      credentials: 'include' // Include httpOnly cookie for authentication
     });
     if (!res.ok) throw new Error('Delete Failed');
     fetchData();
