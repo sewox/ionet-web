@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
+const helmet = require('helmet');
 const getDb = require('./db.cjs');
 const multer = require('multer');
 const path = require('path');
@@ -95,6 +96,12 @@ app.use((req, res, next) => {
     console.log(`[Request] ${req.method} ${req.url}`);
     next();
 });
+
+// Security Headers with Helmet
+// Configure Cross-Origin-Resource-Policy as 'cross-origin' for file uploads and image serving
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' }
+}));
 
 // CORS Configuration - restrict to allowed origins
 const allowedOrigins = process.env.ALLOWED_ORIGINS
@@ -622,20 +629,19 @@ app.post(`${BASE_PATH}/v1/upload`, authenticate, upload.single('file'), async (r
 
     try {
         // Validate file content using magic bytes
-        const fs = require('fs');
-        const fileBuffer = fs.readFileSync(req.file.path);
+        const fileBuffer = await fs.promises.readFile(req.file.path);
         const fileTypeResult = await fileTypeFromBuffer(fileBuffer);
 
         if (!fileTypeResult) {
             // Unknown file type - remove the file
-            fs.unlinkSync(req.file.path);
+            await fs.promises.unlink(req.file.path);
             return res.status(400).json({ error: 'Unknown file type' });
         }
 
         // Verify the detected MIME type matches our allowed types
         if (!ALLOWED_FILE_TYPES.includes(fileTypeResult.mime)) {
             // File type mismatch - remove the file
-            fs.unlinkSync(req.file.path);
+            await fs.promises.unlink(req.file.path);
             return res.status(400).json({
                 error: 'Invalid file type. Only images and PDFs are allowed.',
                 detected: fileTypeResult.mime
@@ -657,7 +663,7 @@ app.post(`${BASE_PATH}/v1/upload`, authenticate, upload.single('file'), async (r
 
         if (expectedMimeTypes && !expectedMimeTypes.includes(fileTypeResult.mime)) {
             // Extension/MIME mismatch - remove the file
-            fs.unlinkSync(req.file.path);
+            await fs.promises.unlink(req.file.path);
             return res.status(400).json({
                 error: 'File extension does not match file content',
                 extension: ext,
@@ -671,8 +677,7 @@ app.post(`${BASE_PATH}/v1/upload`, authenticate, upload.single('file'), async (r
         // Clean up file on error
         if (req.file && req.file.path) {
             try {
-                const fs = require('fs');
-                fs.unlinkSync(req.file.path);
+                await fs.promises.unlink(req.file.path);
             } catch (cleanupError) {
                 console.error('Error cleaning up file:', cleanupError);
             }
