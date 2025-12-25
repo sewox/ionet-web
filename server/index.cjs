@@ -4,6 +4,7 @@ const nodemailer = require('nodemailer');
 const cors = require('cors');
 const helmet = require('helmet');
 const getDb = require('./db.cjs');
+const logger = require('./logger.cjs');
 const multer = require('multer');
 const path = require('path');
 const bcrypt = require('bcryptjs');
@@ -22,10 +23,10 @@ const fs = require('fs');
 // Determine which .env file to load based on NODE_ENV
 const nodeEnv = process.env.NODE_ENV || 'development';
 
-console.log(`\n${'='.repeat(60)}`);
-console.log(`🚀 Starting I/ONET Server`);
-console.log(`${'='.repeat(60)}`);
-console.log(`📦 Environment: ${nodeEnv}`);
+logger.info('='.repeat(60));
+logger.info('🚀 Starting I/ONET Server');
+logger.info('='.repeat(60));
+logger.info(`📦 Environment: ${nodeEnv}`);
 
 // Try to load .env files only if they exist (for local development)
 // In Docker/Coolify, environment variables are injected directly
@@ -40,15 +41,15 @@ let envFileLoaded = false;
 for (const envFile of envFiles) {
     if (fs.existsSync(envFile)) {
         require('dotenv').config({ path: envFile });
-        console.log(`✓ Loaded environment from: ${path.basename(envFile)}`);
+        logger.info(`✓ Loaded environment from: ${path.basename(envFile)}`);
         envFileLoaded = true;
         break;
     }
 }
 
 if (!envFileLoaded) {
-    console.log('ℹ No .env file found - using environment variables from system/container');
-    console.log('  (This is normal for Docker/Coolify deployments)');
+    logger.info('ℹ No .env file found - using environment variables from system/container');
+    logger.info('  (This is normal for Docker/Coolify deployments)');
 }
 
 // Validate required environment variables on startup
@@ -62,13 +63,13 @@ for (const envVar of requiredEnvVars) {
 }
 
 if (missingVars.length > 0) {
-    console.error(`\n${'='.repeat(60)}`);
-    console.error(`❌ ERROR: Missing required environment variables:`);
-    missingVars.forEach(varName => console.error(`   - ${varName}`));
-    console.error(`\nPlease configure these variables in:`);
-    console.error(`  - Local: .env file`);
-    console.error(`  - Docker/Coolify: Environment Variables in the UI`);
-    console.error(`${'='.repeat(60)}\n`);
+    logger.error('='.repeat(60));
+    logger.error(`❌ ERROR: Missing required environment variables`);
+    missingVars.forEach(varName => logger.error(`   - ${varName}`));
+    logger.error(`\nPlease configure these variables in:`);
+    logger.error(`  - Local: .env file`);
+    logger.error(`  - Docker/Coolify: Environment Variables in the UI`);
+    logger.error('='.repeat(60));
     process.exit(1);
 }
 
@@ -84,16 +85,31 @@ if (BASE_PATH !== '/') {
 const DB_PATH = process.env.DB_PATH || 'server/database.sqlite';
 
 // Log configuration
-console.log(`\n📋 Server Configuration:`);
-console.log(`   - Port: ${PORT}`);
-console.log(`   - Base Path: ${BASE_PATH}`);
-console.log(`   - Database: ${DB_PATH}`);
-console.log(`   - Upload Dir: ${process.env.UPLOAD_DIR || 'server/uploads/'}`);
-console.log(`   - Allowed Origins: ${process.env.ALLOWED_ORIGINS || 'localhost only'}`);
-console.log(`${'='.repeat(60)}\n`);
+logger.info('📋 Server Configuration:', {
+    port: PORT,
+    basePath: BASE_PATH,
+    database: DB_PATH,
+    uploadDir: process.env.UPLOAD_DIR || 'server/uploads/',
+    allowedOrigins: process.env.ALLOWED_ORIGINS || 'localhost only'
+});
 
+// HTTP Request Logging Middleware
 app.use((req, res, next) => {
-    console.log(`[Request] ${req.method} ${req.url}`);
+    const startTime = Date.now();
+
+    // Log after response
+    res.on('finish', () => {
+        const duration = Date.now() - startTime;
+        logger.info('HTTP Request', {
+            method: req.method,
+            url: req.url,
+            statusCode: res.statusCode,
+            duration: `${duration}ms`,
+            ip: req.ip || req.connection?.remoteAddress,
+            userAgent: req.get('user-agent')
+        });
+    });
+
     next();
 });
 
@@ -129,7 +145,7 @@ app.use(`${BASE_PATH}/uploads`, express.static(path.join(__dirname, process.env.
 const isDevelopment = (process.env.NODE_ENV || 'development') === 'development';
 
 if (isDevelopment) {
-    console.log('⚠ Rate limiting DISABLED in development mode');
+    logger.warn('⚠ Rate limiting DISABLED in development mode');
 } else {
     const generalLimiter = rateLimit({
         windowMs: 15 * 60 * 1000, // 15 minutes
@@ -165,7 +181,7 @@ app.use(async (req, res, next) => {
         req.db = await getDb();
         next();
     } catch (err) {
-        console.error("DB Connection Error:", err);
+        logger.error('DB Connection Error', { error: err.message, stack: err.stack });
         res.status(500).json({ error: "Database connection failed" });
     }
 });
@@ -189,7 +205,7 @@ const authenticate = (req, res, next) => {
                 return next();
             } catch (err) {
                 // Log internally but don't expose error details to client
-                console.error("JWT verification failed");
+                logger.warn('JWT verification failed', { error: err.message });
                 authFailed = true;
             }
         } else {
@@ -239,7 +255,7 @@ const createCrud = (table, fields, excludeMethods = []) => {
             const rows = await req.db.all(`SELECT * FROM ${table}`);
             res.json(rows);
         } catch (err) {
-            console.error(`Error fetching from ${table}:`, err);
+            logger.error(`Error fetching from ${table}`, { error: err.message, stack: err.stack });
             res.status(500).json({ error: "Failed to fetch data" });
         }
     });
@@ -252,7 +268,7 @@ const createCrud = (table, fields, excludeMethods = []) => {
             if (!row) return res.status(404).json({ error: "Not found" });
             res.json(row);
         } catch (err) {
-            console.error(`Error fetching from ${table}:`, err);
+            logger.error(`Error fetching from ${table}`, { error: err.message, stack: err.stack });
             res.status(500).json({ error: "Failed to fetch data" });
         }
     });
@@ -361,10 +377,10 @@ const createCrud = (table, fields, excludeMethods = []) => {
                             subject: replacer(subject),
                             html: replacer(html),
                         });
-                        console.log("Email sent successfully");
+                        logger.info('Email sent successfully', { to, subject: replacer(subject) });
 
                     } catch (emailErr) {
-                        console.error("Email sending failed:", emailErr);
+                        logger.error('Email sending failed', { error: emailErr.message, stack: emailErr.stack });
                     }
 
                     res.json(data);
@@ -379,7 +395,7 @@ const createCrud = (table, fields, excludeMethods = []) => {
                 res.json(data);
 
             } catch (err) {
-                console.error(`Error creating in ${table}:`, err);
+                logger.error(`Error creating in ${table}`, { error: err.message, stack: err.stack });
                 res.status(500).json({ error: "Failed to create data" });
             }
         });
@@ -407,7 +423,7 @@ const createCrud = (table, fields, excludeMethods = []) => {
                 );
                 res.json({ success: true, id, ...data });
             } catch (err) {
-                console.error(`Error updating in ${table}:`, err);
+                logger.error(`Error updating in ${table}`, { error: err.message, stack: err.stack });
                 res.status(500).json({ error: "Failed to update data" });
             }
         });
@@ -421,7 +437,7 @@ const createCrud = (table, fields, excludeMethods = []) => {
                 await req.db.run(`DELETE FROM ${table} WHERE id = ?`, id);
                 res.json({ message: 'Deleted' });
             } catch (err) {
-                console.error(`Error deleting from ${table}:`, err);
+                logger.error(`Error deleting from ${table}`, { error: err.message, stack: err.stack });
                 res.status(500).json({ error: "Failed to delete data" });
             }
         });
@@ -445,7 +461,7 @@ app.post(`${BASE_PATH}/v1/auth/login`, async (req, res) => {
         const jwtSecret = process.env.JWT_SECRET;
 
         if (!adminPasswordHash || !jwtSecret) {
-            console.error('Server configuration error: missing required environment variables');
+            logger.error('Server configuration error: missing required environment variables');
             return res.status(500).json({ success: false, message: 'Server configuration error' });
         }
 
@@ -462,7 +478,7 @@ app.post(`${BASE_PATH}/v1/auth/login`, async (req, res) => {
             res.status(401).json({ success: false, message: 'Invalid credentials' });
         }
     } catch (err) {
-        console.error('Login error:', err);
+        logger.error('Login error', { error: err.message, stack: err.stack });
         res.status(500).json({ success: false, message: 'Authentication failed' });
     }
 });
@@ -481,7 +497,7 @@ pagesRouter.get('/slug/:slug', async (req, res) => {
         if (!row) return res.status(404).json({ error: "Page not found" });
         res.json(row);
     } catch (err) {
-        console.error('Error fetching page by slug:', err);
+        logger.error('Error fetching page by slug', { error: err.message, stack: err.stack });
         res.status(500).json({ error: "Failed to fetch page" });
     }
 });
@@ -532,7 +548,7 @@ settingsRouter.get('/', async (req, res) => {
 
         res.json(filteredRows);
     } catch (err) {
-        console.error('Error fetching settings:', err);
+        logger.error('Error fetching settings', { error: err.message, stack: err.stack });
         res.status(500).json({ error: "Failed to fetch settings" });
     }
 });
@@ -556,7 +572,7 @@ settingsRouter.post('/', authenticate, async (req, res) => {
         }
         res.json({ success: true, ckey, value });
     } catch (err) {
-        console.error('Error saving setting:', err);
+        logger.error('Error saving setting', { error: err.message, stack: err.stack });
         res.status(500).json({ error: "Failed to save setting" });
     }
 });
@@ -567,7 +583,7 @@ settingsRouter.delete('/:ckey', authenticate, async (req, res) => {
         const result = await req.db.run("DELETE FROM site_settings WHERE ckey = ?", ckey);
         res.json({ success: true, message: 'Deleted', changes: result.changes });
     } catch (err) {
-        console.error('Error deleting setting:', err);
+        logger.error('Error deleting setting', { error: err.message, stack: err.stack });
         res.status(500).json({ error: "Failed to delete setting" });
     }
 });
@@ -679,10 +695,10 @@ app.post(`${BASE_PATH}/v1/upload`, authenticate, upload.single('file'), async (r
             try {
                 await fs.promises.unlink(req.file.path);
             } catch (cleanupError) {
-                console.error('Error cleaning up file:', cleanupError);
+                logger.error('Error cleaning up file', { error: cleanupError.message });
             }
         }
-        console.error('File upload error:', error);
+        logger.error('File upload error', { error: error.message, stack: error.stack });
         res.status(500).json({ error: 'File upload failed' });
     }
 });
@@ -727,7 +743,7 @@ app.get(`${BASE_PATH}/sitemap.xml`, async (req, res) => {
         res.set('Content-Type', 'application/xml');
         res.send(xml);
     } catch (err) {
-        console.error("Sitemap error:", err);
+        logger.error('Sitemap error', { error: err.message, stack: err.stack });
         res.status(500).send("Error");
     }
 });
@@ -768,7 +784,7 @@ app.get(`${BASE_PATH}/v1/health`, async (req, res) => {
             version: '1.0.0'
         });
     } catch (err) {
-        console.error('Health check error:', err);
+        logger.error('Health check error', { error: err.message, stack: err.stack });
         res.status(500).json({
             status: 'unhealthy',
             error: 'Database connection failed'
@@ -780,7 +796,7 @@ app.get(`${BASE_PATH}/v1/health`, async (req, res) => {
 const distPath = path.join(__dirname, '../dist');
 
 if (fs.existsSync(distPath)) {
-    console.log(`Serving static files from: ${distPath}, Base Path: ${BASE_PATH}`);
+    logger.info('Serving static files', { distPath, basePath: BASE_PATH });
 
     // 1. Serve static assets under BASE_PATH
     app.use(BASE_PATH, express.static(distPath));
@@ -808,9 +824,13 @@ if (fs.existsSync(distPath)) {
         res.sendFile(path.join(distPath, 'index.html'));
     });
 } else {
-    console.log("Dist folder not found, running might be in dev mode or not built yet.");
+    logger.info('Dist folder not found, running might be in dev mode or not built yet');
 }
 
 app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+    logger.info('Server started successfully', {
+        port: PORT,
+        url: `http://localhost:${PORT}`,
+        environment: process.env.NODE_ENV || 'development'
+    });
 });
