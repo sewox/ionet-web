@@ -75,6 +75,9 @@ if (missingVars.length > 0) {
 }
 
 const app = express();
+// Trust proxy - Required when running behind nginx/apache reverse proxy
+// Allows Express to correctly detect HTTPS and client IP addresses
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3001;
 
 // Handle base path correctly - if root (/), keep it as /, otherwise remove trailing slash
@@ -472,10 +475,9 @@ app.post(`${BASE_PATH}/v1/auth/login`, async (req, res) => {
             );
 
             // Set httpOnly cookie instead of returning token in response
-            const isProduction = process.env.NODE_ENV === 'production';
             res.cookie('token', token, {
                 httpOnly: true,
-                secure: isProduction, // HTTPS only in production
+                secure: process.env.NODE_ENV !== 'development', // HTTPS in staging and production
                 sameSite: 'strict',
                 maxAge: 24 * 60 * 60 * 1000 // 24 hours
             });
