@@ -30,7 +30,7 @@ ENV VITE_BASE_PATH=$VITE_BASE_PATH \
     VITE_APP_ENV=$VITE_APP_ENV
 
 # Build frontend
-RUN npm run build:${VITE_APP_ENV:-stage}
+RUN npm run build:stage
 
 # Remove dev dependencies to reduce image size
 RUN npm prune --production
