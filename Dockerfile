@@ -35,8 +35,13 @@ RUN npm run build:stage
 # Remove dev dependencies to reduce image size
 RUN npm prune --production
 
-# Create runtime directories
-RUN mkdir -p server/db server/uploads
+# Create runtime directories and set permissions for node user
+RUN mkdir -p server/db server/uploads server/logs && \
+    chown -R node:node /app/server/db /app/server/uploads /app/server/logs && \
+    chmod -R 755 /app/server/db /app/server/uploads /app/server/logs
+
+# Switch to non-root user for security
+USER node
 
 # Expose port
 EXPOSE 3001
