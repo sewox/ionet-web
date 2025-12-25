@@ -49,7 +49,7 @@ echo ""
 
 # 3. Backend Health Check
 echo -e "${BLUE}[3] Backend Health Check${NC}"
-HEALTH_RESPONSE=$(curl -s http://localhost:3001/ionet-web/api/health 2>&1)
+HEALTH_RESPONSE=$(curl -s http://localhost:3001//api/health 2>&1)
 if echo "$HEALTH_RESPONSE" | grep -q "healthy"; then
     echo -e "  ${GREEN}✓ Backend is healthy${NC}"
     echo "$HEALTH_RESPONSE" | jq '.' 2>/dev/null || echo "$HEALTH_RESPONSE"
@@ -61,7 +61,7 @@ echo ""
 
 # 4. API Endpoint Test
 echo -e "${BLUE}[4] API Endpoint Test${NC}"
-API_RESPONSE=$(curl -s http://localhost:3001/ionet-web/api/blog_posts 2>&1)
+API_RESPONSE=$(curl -s http://localhost:3001//api/blog_posts 2>&1)
 if echo "$API_RESPONSE" | grep -q "<!DOCTYPE\|<html"; then
     echo -e "  ${RED}✗ API returning HTML (should be JSON)${NC}"
     echo -e "  ${YELLOW}  This indicates proxy misconfiguration${NC}"
@@ -200,5 +200,5 @@ echo -e "  Start Backend:    ${YELLOW}NODE_ENV=staging pm2 start server/index.cj
 echo -e "  Restart Backend:  ${YELLOW}pm2 restart ionet-staging${NC}"
 echo -e "  View Logs:        ${YELLOW}pm2 logs ionet-staging${NC}"
 echo -e "  Seed Database:    ${YELLOW}node server/seed.cjs staging${NC}"
-echo -e "  Test API:         ${YELLOW}curl http://localhost:3001/ionet-web/api/health${NC}"
+echo -e "  Test API:         ${YELLOW}curl http://localhost:3001//api/health${NC}"
 echo ""

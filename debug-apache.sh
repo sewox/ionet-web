@@ -53,7 +53,7 @@ echo ""
 
 # 3. Test backend directly
 echo "[3] Testing Backend Direct Access..."
-RESPONSE=$(curl -s -w "\n%{http_code}" http://localhost:3001/ionet-web/api/health 2>&1)
+RESPONSE=$(curl -s -w "\n%{http_code}" http://localhost:3001//api/health 2>&1)
 HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
 BODY=$(echo "$RESPONSE" | head -n-1)
 
@@ -68,7 +68,7 @@ echo ""
 
 # 4. Test API via Apache
 echo "[4] Testing API via Apache..."
-API_RESPONSE=$(curl -s -w "\n%{http_code}" http://localhost/ionet-web/api/health 2>&1)
+API_RESPONSE=$(curl -s -w "\n%{http_code}" http://localhost//api/health 2>&1)
 API_CODE=$(echo "$API_RESPONSE" | tail -n1)
 API_BODY=$(echo "$API_RESPONSE" | head -n-1)
 
@@ -107,10 +107,10 @@ if [ -f "/etc/apache2/sites-enabled/000-default.conf" ]; then
     echo "  Config file: /etc/apache2/sites-enabled/000-default.conf"
     
     if grep -q "ProxyPass.*ionet-web/api" /etc/apache2/sites-enabled/000-default.conf; then
-        echo "  ✓ ProxyPass for /ionet-web/api found:"
+        echo "  ✓ ProxyPass for //api found:"
         grep "ProxyPass.*ionet-web/api" /etc/apache2/sites-enabled/000-default.conf
     else
-        echo "  ✗ ProxyPass for /ionet-web/api NOT found!"
+        echo "  ✗ ProxyPass for //api NOT found!"
         echo "    Config needs to be updated!"
     fi
 else

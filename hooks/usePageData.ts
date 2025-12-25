@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 
-const API_BASE = ((import.meta as any).env.VITE_BASE_PATH || '/ionet-web').replace(/\/$/, '');
+const API_BASE = ((import.meta as any).env.VITE_BASE_PATH || '/').replace(/\/$/, '');
 
 export function usePageData<T>(endpoint: string, dependencies: any[] = []): {
     data: T[];

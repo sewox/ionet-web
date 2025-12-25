@@ -54,13 +54,13 @@ Output: `dist/` folder with development configuration
 ```bash
 npm run build:stage
 ```
-Output: `dist/` folder with staging configuration (base path: `/ionet-web`)
+Output: `dist/` folder with staging configuration (base path: `/`)
 
 ### Build for Production
 ```bash
 npm run build:prod
 ```
-Output: `dist/` folder with production configuration (base path: `/ionet-web`)
+Output: `dist/` folder with production configuration (base path: `/`)
 
 ---
 
@@ -132,7 +132,7 @@ ionet-web/
 | `JWT_SECRET` | JWT signing secret | `64-char-hex-string` |
 | `ADMIN_PASSWORD_HASH` | Bcrypt admin password | `$2b$10$...` |
 | `DB_PATH` | Database file path | `server/db/dev.db` |
-| `VITE_BASE_PATH` | App base URL path | `/` or `/ionet-web` |
+| `VITE_BASE_PATH` | App base URL path | `/` or `/` |
 | `VITE_API_URL` | Backend API URL | `http://localhost:3001` |
 
 ### Optional Variables

@@ -61,7 +61,7 @@ const EnvironmentBadge: React.FC = () => {
 
 const Header: React.FC = () => {
   const location = useLocation();
-  const isAdmin = location.pathname.startsWith('/ionet-web/admin') || location.pathname === '/ionet-web/login';
+  const isAdmin = location.pathname.startsWith('/admin') || location.pathname === '/login';
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { siteSettings, menuItems } = useData() as any; // Using any to bypass strict context type check for now
 
@@ -186,7 +186,7 @@ const Header: React.FC = () => {
 const Footer: React.FC = () => {
   const location = useLocation();
   const { getContent } = useContent();
-  if (location.pathname.startsWith('/ionet-web/admin')) return null;
+  if (location.pathname.startsWith('/admin')) return null;
 
   return (
     <footer className="bg-secondary text-white pt-16 pb-8 border-t border-gray-800">
@@ -306,7 +306,7 @@ const App: React.FC = () => {
   return (
     <AuthProvider>
       <DataProvider>
-        <BrowserRouter basename={import.meta.env.VITE_BASE_PATH || "/ionet-web"}>
+        <BrowserRouter basename={import.meta.env.VITE_BASE_PATH || "/"}>
           <div className="flex flex-col min-h-screen">
             <EnvironmentBadge />
             <Header />

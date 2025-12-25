@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => {
   const apiUrl = env.VITE_API_URL || 'http://localhost:3001';
 
   // Normalize base path (ensure trailing slash for consistency)
-  const basePath = env.VITE_BASE_PATH || '/ionet-web/';
+  const basePath = env.VITE_BASE_PATH || '//';
   const normalizedBase = basePath.endsWith('/') ? basePath : basePath + '/';
 
   console.log(`[Vite] Running in ${mode} mode`);

@@ -41,7 +41,7 @@ MAIL_FROM=noreply@ionetteknoloji.com.tr
    - Type: Docker Compose
 
 2. **Repository**
-   - Git URL: `https://github.com/sewox/ionet-web`
+   - Git URL: `https://github.com/sewox/`
    - Branch: `main`
 
 3. **Build Configuration**

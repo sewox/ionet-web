@@ -79,8 +79,8 @@ This application supports three environments with complete isolation:
 | Environment | Config File | Base Path | Database | Purpose |
 |------------|-------------|-----------|----------|---------|
 | **Development** | `.env.development` | `/` | `server/db/dev.db` | Local development |
-| **Staging** | `.env.stage` | `/ionet-web` | `server/db/stage.db` | Testing/QA |
-| **Production** | `.env.production` | `/ionet-web` | `server/db/prod.db` | Live deployment |
+| **Staging** | `.env.stage` | `/` | `server/db/stage.db` | Testing/QA |
+| **Production** | `.env.production` | `/` | `server/db/prod.db` | Live deployment |
 
 ### Available Commands
 

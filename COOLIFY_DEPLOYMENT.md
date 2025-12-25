@@ -58,7 +58,7 @@ ADMIN_PASSWORD_HASH=<bcrypt-hash>
 ALLOWED_ORIGINS=https://your-staging-domain.com
 
 # Frontend Configuration
-VITE_BASE_PATH=/ionet-web
+VITE_BASE_PATH=/
 # ⚠️ KENDİ DOMAIN'İNİZİ GİRİN
 VITE_API_URL=https://your-staging-domain.com
 VITE_APP_ENV=staging
@@ -107,7 +107,7 @@ ADMIN_PASSWORD_HASH=<bcrypt-hash>
 ALLOWED_ORIGINS=https://your-domain.com,https://www.your-domain.com
 
 # Frontend Configuration
-VITE_BASE_PATH=/ionet-web
+VITE_BASE_PATH=/
 # ⚠️ KENDİ PRODUCTION DOMAIN'İNİZİ GİRİN
 VITE_API_URL=https://your-domain.com
 VITE_APP_ENV=production

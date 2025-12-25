@@ -208,7 +208,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [legalSections, setLegalSections] = useState<LegalSection[]>([]);
 
   // Dynamic API Base Path
-  const basePath = (import.meta as any).env.VITE_BASE_PATH || '/ionet-web';
+  const basePath = (import.meta as any).env.VITE_BASE_PATH || '/';
   const API_BASE = basePath === '/' ? '' : basePath.replace(/\/$/, '');
 
   // Lazy loading: Only fetch essential data on mount

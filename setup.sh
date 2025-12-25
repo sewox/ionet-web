@@ -57,14 +57,14 @@ case $ENV_CHOICE in
         ENVIRONMENT="staging"
         ENV_FILE_NAME=".env.stage"
         DEFAULT_PORT="3001"
-        DEFAULT_URL_PATH="/ionet-web"
+        DEFAULT_URL_PATH="/"
         DEFAULT_DOMAIN="https://stage.ionet.com.tr"
         ;;
     3)
         ENVIRONMENT="production"
         ENV_FILE_NAME=".env.production"
         DEFAULT_PORT="3001"
-        DEFAULT_URL_PATH="/ionet-web"
+        DEFAULT_URL_PATH="/"
         DEFAULT_DOMAIN="https://www.ionet.com.tr"
         ;;
     *)

@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
 const helmet = require('helmet');
+const cookieParser = require('cookie-parser');
 const getDb = require('./db.cjs');
 const logger = require('./logger.cjs');
 const multer = require('multer');
@@ -138,6 +139,7 @@ app.use(cors({
 }));
 
 app.use(bodyParser.json({ limit: '50mb' }));
+app.use(cookieParser());
 // Serve uploads under BASE_PATH/uploads
 app.use(`${BASE_PATH}/uploads`, express.static(path.join(__dirname, process.env.UPLOAD_DIR || 'uploads')));
 
@@ -186,29 +188,24 @@ app.use(async (req, res, next) => {
     }
 });
 
-// Middleware for Auth - JWT based
+// Middleware for Auth - Cookie-based JWT authentication
 const authenticate = (req, res, next) => {
-    const authHeader = req.headers.authorization;
+    const token = req.cookies.token; // Read token from httpOnly cookie
     let authFailed = false;
     let errorReason = 'Unauthorized'; // Generic error for all cases
 
-    if (authHeader) {
-        const token = authHeader.split(' ')[1];
-        if (token) {
-            try {
-                const jwtSecret = process.env.JWT_SECRET;
-                if (!jwtSecret) {
-                    throw new Error('JWT_SECRET not configured');
-                }
-                const decoded = jwt.verify(token, jwtSecret);
-                req.user = decoded;
-                return next();
-            } catch (err) {
-                // Log internally but don't expose error details to client
-                logger.warn('JWT verification failed', { error: err.message });
-                authFailed = true;
+    if (token) {
+        try {
+            const jwtSecret = process.env.JWT_SECRET;
+            if (!jwtSecret) {
+                throw new Error('JWT_SECRET not configured');
             }
-        } else {
+            const decoded = jwt.verify(token, jwtSecret);
+            req.user = decoded;
+            return next();
+        } catch (err) {
+            // Log internally but don't expose error details to client
+            logger.warn('JWT verification failed', { error: err.message });
             authFailed = true;
         }
     } else {
@@ -446,7 +443,7 @@ const createCrud = (table, fields, excludeMethods = []) => {
     return router;
 };
 
-// Login Endpoint - JWT based authentication
+// Login Endpoint - Cookie-based JWT authentication
 app.post(`${BASE_PATH}/v1/auth/login`, async (req, res) => {
     const { password } = req.body;
 
@@ -473,7 +470,18 @@ app.post(`${BASE_PATH}/v1/auth/login`, async (req, res) => {
                 jwtSecret,
                 { expiresIn: '24h' }
             );
-            res.json({ success: true, token });
+
+            // Set httpOnly cookie instead of returning token in response
+            const isProduction = process.env.NODE_ENV === 'production';
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: isProduction, // HTTPS only in production
+                sameSite: 'strict',
+                maxAge: 24 * 60 * 60 * 1000 // 24 hours
+            });
+
+            logger.info('User logged in successfully');
+            res.json({ success: true, message: 'Login successful' });
         } else {
             res.status(401).json({ success: false, message: 'Invalid credentials' });
         }
@@ -481,6 +489,27 @@ app.post(`${BASE_PATH}/v1/auth/login`, async (req, res) => {
         logger.error('Login error', { error: err.message, stack: err.stack });
         res.status(500).json({ success: false, message: 'Authentication failed' });
     }
+});
+
+// Logout Endpoint - Clear httpOnly cookie
+app.post(`${BASE_PATH}/v1/auth/logout`, (req, res) => {
+    res.clearCookie('token', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict'
+    });
+    logger.info('User logged out successfully');
+    res.json({ success: true, message: 'Logout successful' });
+});
+
+// Auth Check Endpoint - Verify if user is authenticated
+app.get(`${BASE_PATH}/v1/auth/check`, authenticate, (req, res) => {
+    // If authenticate middleware passes, user is authenticated
+    res.json({
+        success: true,
+        authenticated: true,
+        user: req.user
+    });
 });
 
 // --- Routes ---
