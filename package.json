@@ -14,7 +14,10 @@
     "preview": "vite preview --mode production",
     "preview:stage": "vite preview --mode stage",
     "type-check": "tsc --noEmit",
-    "lint": "npm run type-check"
+    "lint": "npm run type-check",
+    "docker:build": "docker build --no-cache -t ionet-web:latest .",
+    "docker:build:stage": "docker build --no-cache --build-arg VITE_BASE_PATH=/ --build-arg VITE_APP_ENV=staging -t ionet-web:stage .",
+    "docker:build:prod": "docker build --no-cache --build-arg VITE_BASE_PATH=/ --build-arg VITE_APP_ENV=production -t ionet-web:prod ."
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
