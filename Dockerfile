@@ -40,6 +40,10 @@ RUN mkdir -p server/db server/uploads server/logs && \
     chown -R node:node /app/server/db /app/server/uploads /app/server/logs && \
     chmod -R 755 /app/server/db /app/server/uploads /app/server/logs
 
+# CRITICAL: Change ownership of entire /app to node user
+# This prevents "permission denied" errors when node user tries to access files
+RUN chown -R node:node /app
+
 # Switch to non-root user for security
 USER node
 

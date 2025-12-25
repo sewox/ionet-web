@@ -1,5 +1,3 @@
-<div>Hello World</div>
-
 import React, { useState, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { DataProvider, useData } from './context/DataContext';
