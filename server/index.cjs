@@ -185,11 +185,18 @@ app.use(async (req, res, next) => {
 const authenticate = (req, res, next) => {
     const token = req.cookies.token; // Read token from httpOnly cookie
 
-    // Debug logging
-    logger.info('Authentication attempt', {
+    // 🔥 DETAILED DEBUG LOGGING
+    logger.info('🔍 AUTH MIDDLEWARE CALLED', {
+        path: req.path,
+        method: req.method,
         hasCookie: !!token,
-        cookies: Object.keys(req.cookies),
-        path: req.path
+        allCookies: Object.keys(req.cookies),
+        headers: {
+            authorization: req.headers.authorization,
+            cookie: req.headers.cookie ? 'present' : 'missing',
+            host: req.headers.host,
+            origin: req.headers.origin
+        }
     });
 
     let authFailed = false;
@@ -199,23 +206,34 @@ const authenticate = (req, res, next) => {
         try {
             const jwtSecret = process.env.JWT_SECRET;
             if (!jwtSecret) {
+                logger.error('❌ JWT_SECRET not configured!');
                 throw new Error('JWT_SECRET not configured');
             }
             const decoded = jwt.verify(token, jwtSecret);
             req.user = decoded;
-            logger.info('Authentication successful', { user: decoded });
+            logger.info('✅ Authentication successful', { user: decoded });
             return next();
         } catch (err) {
             // Log internally but don't expose error details to client
-            logger.warn('JWT verification failed', { error: err.message });
+            logger.warn('❌ JWT verification failed', {
+                error: err.message,
+                tokenPresent: true
+            });
             authFailed = true;
         }
     } else {
-        logger.warn('No token cookie found');
+        logger.warn('❌ No token cookie found', {
+            cookies: req.cookies,
+            headers: req.headers.cookie
+        });
         authFailed = true;
     }
 
     // Consistent response for all authentication failures
+    logger.error('🚫 SENDING 401 FROM OUR CODE', {
+        path: req.path,
+        reason: errorReason
+    });
     return res.status(401).json({ error: errorReason });
 };
 
