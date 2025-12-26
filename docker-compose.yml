@@ -11,10 +11,6 @@ services:
 
     restart: unless-stopped
 
-    # Expose port for Dokploy reverse proxy
-    ports:
-      - "${PORT:-3001}:3001"
-
     environment:
       - NODE_ENV=${NODE_ENV:-staging}
       - PORT=${PORT:-3001}
@@ -31,7 +27,7 @@ services:
       - db-data:/app/server/db
       - uploads-data:/app/server/uploads
 
-    # Dokploy labels for traefik routing (if used)
+    # Dokploy labels for traefik routing
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.ionet.rule=Host(`${SITE_URL}`)"
