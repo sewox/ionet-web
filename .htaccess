@@ -1,9 +1,7 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
     
-    # Reverse Proxy to Node.js App
-    # This forwards all requests to the Node.js server running on port 3001
-    # Ensure Apache mod_proxy and mod_proxy_http are enabled
-    
-    RewriteRule ^(.*)$ http://127.0.0.1:3001//$1 [P,L]
+    # Redirect all requests to public folder
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
 </IfModule>

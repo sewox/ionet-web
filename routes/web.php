@@ -183,10 +183,5 @@ Route::prefix('admin')->group(function () {
     });
 });
 
-// Dynamic CMS pages (must be last before fallback)
+// Dynamic CMS pages (must be last)
 Route::get('/{slug}', [PageController::class, 'dynamic'])->name('page.dynamic');
-
-// Fallback for development
-Route::fallback(function () {
-    return response()->json(['message' => 'Route not found. Blade migration in progress.'], 404);
-});
