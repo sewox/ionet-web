@@ -1,309 +1,66 @@
-<div align="center">
-<img width="1200" height="475" alt="I/ONET Web Application" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-# I/ONET Web Application
+<p align="center">
+<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+</p>
 
-A professional corporate website built with React, TypeScript, and Express, featuring a comprehensive admin panel and multi-environment support.
+## About Laravel
 
-[![Node.js](https://img.shields.io/badge/Node.js-43853D?style=flat&logo=node.js&logoColor=white)](https://nodejs.org/)
-[![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)](https://reactjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Express](https://img.shields.io/badge/Express-000000?style=flat&logo=express&logoColor=white)](https://expressjs.com/)
+Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
 
----
+- [Simple, fast routing engine](https://laravel.com/docs/routing).
+- [Powerful dependency injection container](https://laravel.com/docs/container).
+- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
+- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
+- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
+- [Robust background job processing](https://laravel.com/docs/queues).
+- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
 
-## 🌟 Features
+Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
-- ✅ **Multi-Environment Support** - Development, Staging, and Production configurations
-- ✅ **Admin Panel** - Comprehensive content management system
-- ✅ **Dynamic Content** - Manage pages, blog posts, services, and more
-- ✅ **Responsive Design** - Mobile-first approach with Tailwind CSS
-- ✅ **SEO Optimized** - Automatic sitemap and robots.txt generation
-- ✅ **Security** - JWT authentication, rate limiting, input validation
-- ✅ **File Upload** - Secure image and document upload system
-- ✅ **Email Integration** - Contact form with SMTP support
+## Learning Laravel
 
----
+Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
 
-## 🚀 Quick Start
+You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
 
-### Prerequisites
+If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
 
-- Node.js 18+ 
-- npm or yarn
+## Laravel Sponsors
 
-### Installation
+We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
 
-1. **Clone the repository**
-   ```bash
-   git clone <your-repo-url>
-   cd ionet-web
-   ```
+### Premium Partners
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+- **[Vehikl](https://vehikl.com/)**
+- **[Tighten Co.](https://tighten.co)**
+- **[WebReinvent](https://webreinvent.com/)**
+- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
+- **[64 Robots](https://64robots.com)**
+- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
+- **[Cyber-Duck](https://cyber-duck.co.uk)**
+- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
+- **[Jump24](https://jump24.co.uk)**
+- **[Redberry](https://redberry.international/laravel/)**
+- **[Active Logic](https://activelogic.com)**
+- **[byte5](https://byte5.de)**
+- **[OP.GG](https://op.gg)**
 
-3. **Set up environment**
-   ```bash
-   # Copy example environment file
-   cp .env.example .env.development
-   
-   # Generate JWT secret
-   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-   
-   # Generate admin password hash
-   node server/generate-password-hash.cjs yourpassword
-   ```
+## Contributing
 
-4. **Update `.env.development`** with your settings
+Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
 
-5. **Run development server**
-   ```bash
-   npm run dev
-   ```
+## Code of Conduct
 
-6. **Open your browser**
-   - Frontend: http://localhost:3000
-   - Backend: http://localhost:3001
-   - Admin Panel: http://localhost:3000/admin
+In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
 
----
+## Security Vulnerabilities
 
-## 🎯 Environment Setup
+If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
 
-This application supports three environments with complete isolation:
+## License
 
-| Environment | Config File | Base Path | Database | Purpose |
-|------------|-------------|-----------|----------|---------|
-| **Development** | `.env.development` | `/` | `server/db/dev.db` | Local development |
-| **Staging** | `.env.stage` | `/` | `server/db/stage.db` | Testing/QA |
-| **Production** | `.env.production` | `/` | `server/db/prod.db` | Live deployment |
-
-### Available Commands
-
-```bash
-# Development
-npm run dev              # Start dev server
-npm run build:dev        # Build for development
-
-# Staging
-npm run dev:stage        # Start staging server (local)
-npm run build:stage      # Build for staging
-
-# Production
-npm run build:prod       # Build for production
-npm run preview          # Preview production build
-```
-
-### Deployment
-
-#### Traditional Deployment
-
-```bash
-# Automated setup (creates environment, builds, and starts PM2)
-sudo ./setup.sh
-
-# Quick deployment
-./deploy.sh [environment]
-
-# Examples:
-./deploy.sh development
-./deploy.sh staging
-./deploy.sh production
-```
-
-#### Docker Deployment (Coolify)
-
-For containerized deployment using Coolify or Docker:
-
-```bash
-# Build staging image
-docker build --build-arg BUILD_ENV=stage -t ionet-web:stage .
-
-# Build production image
-docker build --build-arg BUILD_ENV=production -t ionet-web:prod .
-
-# Run with Docker Compose
-docker-compose -f docker-compose.stage.yml up -d    # Staging
-docker-compose -f docker-compose.prod.yml up -d     # Production
-```
-
-📖 **Coolify Deployment Guide**: See [COOLIFY_DEPLOYMENT.md](COOLIFY_DEPLOYMENT.md) for comprehensive Docker deployment instructions.
-
-📖 **Traditional Setup Guide**: See [ENVIRONMENT_SETUP.md](ENVIRONMENT_SETUP.md) for comprehensive documentation.
-
-
----
-
-## 📂 Project Structure
-
-```
-ionet-web/
-├── components/          # Reusable React components
-├── context/            # React context providers (Auth, Data)
-├── hooks/              # Custom React hooks
-├── pages/              # Page components
-│   ├── admin/         # Admin panel pages
-│   └── ...            # Public pages
-├── server/            # Backend Express server
-│   ├── db.cjs        # Database configuration
-│   ├── index.cjs     # Main server file
-│   └── db/           # SQLite databases (per environment)
-├── .env.development   # Development environment config
-├── .env.stage         # Staging environment config
-├── .env.production    # Production environment config
-├── vite.config.ts     # Vite build configuration
-├── setup.sh           # Automated setup script
-└── deploy.sh          # Deployment script
-```
-
----
-
-## 🔐 Security Features
-
-- **JWT Authentication** - Secure admin panel access
-- **Password Hashing** - Bcrypt with salt rounds
-- **Rate Limiting** - Protection against brute force
-- **Input Validation** - XSS and injection prevention
-- **CORS Configuration** - Environment-specific origins
-- **File Type Validation** - Magic byte verification
-- **Environment Isolation** - Separate credentials per environment
-
----
-
-## 🛠️ Technology Stack
-
-### Frontend
-- **React 18** - UI framework
-- **TypeScript** - Type safety
-- **Vite** - Build tool and dev server
-- **Tailwind CSS** - Utility-first styling
-- **React Router** - Client-side routing
-- **React Quill** - Rich text editor
-
-### Backend
-- **Express** - Node.js web framework
-- **SQLite** - Lightweight database
-- **JWT** - Authentication
-- **Multer** - File uploads
-- **Nodemailer** - Email sending
-- **PM2** - Process management
-
----
-
-## 📊 Admin Panel Features
-
-Access the admin panel at `/admin/login` (default password: `admin123`)
-
-- 📝 **Content Management**
-  - Pages (dynamic routes)
-  - Blog posts
-  - Job listings
-  - Projects/References
-  
-- 🎨 **Customization**
-  - Site settings
-  - Menu items
-  - Home page sections
-  - Footer content
-  
-- 📧 **Communication**
-  - Contact form submissions
-  - Email configuration
-  
-- 📤 **Media Management**
-  - Image upload
-  - File management
-
----
-
-## 🌐 API Endpoints
-
-### Public Endpoints
-- `GET /api/settings` - Site settings (filtered)
-- `GET /api/pages` - Dynamic pages
-- `GET /api/blog_posts` - Blog articles
-- `POST /api/messages` - Contact form submission
-- `GET /sitemap.xml` - SEO sitemap
-- `GET /robots.txt` - Search engine directives
-- `GET /api/health` - Health check & environment info
-
-### Protected Endpoints (Require Authentication)
-- `POST /api/auth/login` - Admin login
-- `POST /api/upload` - File upload
-- `PUT /api/*` - Update content
-- `DELETE /api/*` - Delete content
-
----
-
-## 🔧 Configuration
-
-### Environment Variables
-
-See [`.env.example`](.env.example) for all available configuration options.
-
-**Essential Variables:**
-- `NODE_ENV` - Environment (development/staging/production)
-- `PORT` - Server port
-- `DB_PATH` - Database file path
-- `JWT_SECRET` - JWT signing secret
-- `ADMIN_PASSWORD_HASH` - Admin password hash
-- `VITE_BASE_PATH` - Application base path
-- `VITE_API_URL` - API endpoint URL
-
----
-
-## 🧪 Health Check
-
-Check application status:
-
-```bash
-curl http://localhost:3001/api/health
-```
-
-Response:
-```json
-{
-  "status": "healthy",
-  "environment": "development",
-  "uptime": 3600,
-  "uptimeFormatted": "1h 0m",
-  "database": "connected",
-  "databasePath": "server/db/dev.db",
-  "timestamp": "2025-12-22T10:00:00.000Z",
-  "version": "1.0.0"
-}
-```
-
----
-
-## 📝 License
-
-This project is proprietary software owned by I/ONET Teknoloji A.Ş.
-
----
-
-## 🤝 Support
-
-For support and questions:
-- 📧 Email: info@ionet.com.tr
-- 📞 Phone: +90 (212) 555 00 00
-- 🌐 Website: https://www.ionet.com.tr
-
----
-
-## 🎓 Additional Resources
-
-- [ENVIRONMENT_SETUP.md](ENVIRONMENT_SETUP.md) - Detailed environment configuration guide
-- [COOLIFY_DEPLOYMENT.md](COOLIFY_DEPLOYMENT.md) - Docker and Coolify deployment guide
-- [.env.example](.env.example) - Environment variables template
-- Server logs: `pm2 logs ionet-[environment]`
-
----
-
-<div align="center">
-Made with ❤️ by I/ONET Teknoloji A.Ş.
-</div>
+The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

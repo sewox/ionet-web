@@ -1,0 +1,45 @@
+@extends('layouts.admin')
+
+@section('content')
+<div class="p-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">{{ isset($tech) ? 'Teknoloji Düzenle' : 'Yeni Teknoloji' }}</h1>
+        <p class="text-gray-500 mt-1">Teknoloji bilgilerini girin</p>
+    </div>
+
+    <div class="max-w-3xl">
+        <form method="POST" action="{{ isset($tech) ? route('admin.career-tech.update', $tech->id) : route('admin.career-tech.store') }}" class="bg-white rounded-lg shadow p-6 space-y-6">
+            @csrf
+            @if(isset($tech)) @method('PUT') @endif
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Teknoloji Adı <span class="text-red-500">*</span></label>
+                <input type="text" name="name" value="{{ old('name', $tech->name ?? '') }}" class="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none @error('name') border-red-500 @enderror" placeholder="Örn: React, Node.js, Docker" required>
+                @error('name') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">İkon URL</label>
+                <input type="text" name="icon" value="{{ old('icon', $tech->icon ?? '') }}" class="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none @error('icon') border-red-500 @enderror" placeholder="https://example.com/tech-icon.svg">
+                @error('icon') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                <p class="mt-1 text-sm text-gray-500">Teknoloji logosu için URL</p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Sıra Numarası</label>
+                <input type="number" name="order_index" value="{{ old('order_index', $tech->order_index ?? 0) }}" min="0" class="w-full h-12 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none @error('order_index') border-red-500 @enderror">
+                @error('order_index') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                <p class="mt-1 text-sm text-gray-500">Gösterim sırası (0 = en üstte)</p>
+            </div>
+
+            <div class="flex items-center gap-4 pt-4">
+                <button type="submit" class="px-6 py-3 bg-primary hover:bg-primary-dark text-white font-semibold rounded-lg transition-colors flex items-center gap-2">
+                    <span class="material-symbols-outlined">save</span>
+                    <span>{{ isset($tech) ? 'Güncelle' : 'Kaydet' }}</span>
+                </button>
+                <a href="{{ route('admin.career-tech.index') }}" class="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg transition-colors">İptal</a>
+            </div>
+        </form>
+    </div>
+</div>
+@endsection
